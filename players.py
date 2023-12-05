@@ -12,7 +12,13 @@ class Player:
         
     def get_current_position(self):
         return self._current_position
-
+    
+    def set_next_move_vector(self, next_move_vector):
+        self._next_move_vector = next_move_vector
+              
+    def set_previous_move_vector(self, previous_move_vector):
+        self._previous_move_vector = previous_move_vector
+        
     def reduce_step_size(self):
         reduced_step_size = self._step_size * self._velocity_inertia_reduction_formula(
             VectorUtils.find_angle_between_two_vectors(
@@ -21,10 +27,7 @@ class Player:
             )
         )
         return reduced_step_size
-    
-    def set_next_move_vector(self, next_move_vector):
-        self._next_move_vector = next_move_vector
-              
+        
     def move(self):
         # Store the previous position and move vector which places player in the current position (previous move vector)
         self._previous_position = np.copy(self._current_position)

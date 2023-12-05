@@ -12,6 +12,7 @@ class VectorUtils:
             raise ZeroDivisionError
         return unit_vector
     
+    @staticmethod
     def find_angle_between_two_vectors(vector_1, vector_2):
         """ 
             Returns the angle in radians between vectors 'v1' and 'v2'
@@ -24,3 +25,11 @@ class VectorUtils:
         
         except ZeroDivisionError:
             return 0
+        
+    @staticmethod
+    def find_vector_angle(vector):
+        return VectorUtils.find_angle_between_two_vectors(vector, np.array([1,0]).reshape(1,-1))
+    
+    @staticmethod
+    def find_angle_vector(angle):
+        return VectorUtils.find_unit_vector(np.array([np.cos(angle), np.sin(angle)]).reshape(1, -1))
