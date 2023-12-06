@@ -7,10 +7,20 @@ class ConstrainedPlayer(Player):
         super().__init__(**kwargs)
         
         self._map = kwargs.get('map')
+        self._boundaries_instruction = kwargs.get('boundaries_instruction')
         self._number_of_feasible_moving_vectors = kwargs.get('number_of_vectors', 8)
         self._angle_spacing = 2 * np.pi / self._number_of_feasible_moving_vectors
         self._feasible_move_vectors = []
         self._feasible_move_vectors_distances = []
+    
+    def get_feasible_move_vectors(self):
+        return self._feasible_move_vectors
+    
+    def get_feasible_move_vectors_distances(self):
+        return self._feasible_move_vectors_distances
+    
+    def set_boundaries_instruction(self, new_instruction):
+        self._boundaries_instruction = new_instruction
         
     def build_feasible_move_vectors(self):
         
@@ -25,12 +35,6 @@ class ConstrainedPlayer(Player):
             VectorUtils.find_angle_vector(base_vector_angle + i * self._angle_spacing)
             for i in range(self._number_of_feasible_moving_vectors)
         ]
-    
-    def get_feasible_move_vectors(self):
-        return self._feasible_move_vectors
-    
-    def get_feasible_move_vectors_distances(self):
-        return self._feasible_move_vectors_distances
     
     def calculate_distance_to_boundary(self, move_vector):
         move_vector_line = [
@@ -55,3 +59,20 @@ class ConstrainedPlayer(Player):
             self.calculate_distance_to_boundary(move_vector)
             for move_vector in self._feasible_move_vectors
         ]
+        
+    def find_boundaries_move_vector(self):
+        self.build_feasible_move_vectors()
+        self.build_feasible_move_vectors_distances()
+        
+        weights = [
+            self._boundaries_instruction(distance)
+            for distance in self._feasible_move_vectors_distances
+        ]
+        
+        weighted_feasible_move_vectors = [
+            weight * move_vector
+            for (weight, move_vector) in zip(weights, self._feasible_move_vectors)
+        ]
+        
+        selected_vector = np.array(weighted_feasible_move_vectors).reshape(self._number_of_feasible_moving_vectors, 2).sum(axis=0)
+        return selected_vector
