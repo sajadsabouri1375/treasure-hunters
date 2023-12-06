@@ -18,6 +18,12 @@ class Player:
               
     def set_previous_move_vector(self, previous_move_vector):
         self._previous_move_vector = previous_move_vector
+    
+    def set_previous_position(self, previous_position):
+        self._previous_position = previous_position
+        
+    def set_current_position(self, current_position):
+        self._current_position = current_position
         
     def reduce_step_size(self):
         reduced_step_size = self._step_size * self._velocity_inertia_reduction_formula(
