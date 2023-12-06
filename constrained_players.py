@@ -21,7 +21,10 @@ class ConstrainedPlayer(Player):
     
     def set_boundaries_instruction(self, new_instruction):
         self._boundaries_instruction = new_instruction
-        
+    
+    def get_map(self):
+        return self._map
+    
     def build_feasible_move_vectors(self):
         
         if (self._previous_move_vector == np.zeros((1,2))).all():
