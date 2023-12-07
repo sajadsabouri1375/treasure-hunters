@@ -9,6 +9,7 @@ class Player:
         self._previous_position = np.copy(self._current_position)
         self._previous_move_vector = np.zeros((1,2))
         self._velocity_inertia_reduction_formula = kwargs.get('velocity_reduction_inertia_formula', lambda tehta: 1)
+        self._inertia_effect = kwargs.get('inertia_effect', 0)
         
     def get_current_position(self):
         return self._current_position
@@ -41,10 +42,13 @@ class Player:
         # Deduct unit next move vector
         unit_next_move_vector = VectorUtils.find_unit_vector(self._next_move_vector)
         
+        # Add inertia effect to next move vector
+        unit_next_move_vector = VectorUtils.find_unit_vector(unit_next_move_vector + self._inertia_effect * self._previous_move_vector)
+        
         # Deduct step size according to inertia velocity reduction formula
         reduced_step_size = self.reduce_step_size()
         
         # Deduct new position
         self._current_position = self._current_position + unit_next_move_vector * reduced_step_size
 
-        self._previous_move_vector = np.copy(self._next_move_vector)
+        self._previous_move_vector = np.copy(unit_next_move_vector)

@@ -10,6 +10,7 @@ class VectorUtils:
             Returns the unit vector of the vector.  
         """
         unit_vector = vector / np.linalg.norm(vector)
+            
         if np.isnan(unit_vector).any():
             raise ZeroDivisionError
         return unit_vector
@@ -44,14 +45,14 @@ class VectorUtils:
         return b
 
     def find_segment_intersect(a1, a2, b1, b2) :
-        da = a2-a1
-        db = b2-b1
-        dp = a1-b1
-        dap = VectorUtils.perpare_line(da)
-        denom = dot( dap, db)
-        num = dot( dap, dp )
         
         try:
+            da = a2-a1
+            db = b2-b1
+            dp = a1-b1
+            dap = VectorUtils.perpare_line(da)
+            denom = dot( dap, db)
+            num = dot( dap, dp )
             intersection = (num / denom.astype(float))*db + b1
             return intersection
         except Exception as e:
@@ -95,3 +96,20 @@ class VectorUtils:
     @staticmethod
     def find_distance_between_two_points(point_01, point_02):
         return np.linalg.norm(point_01-point_02)
+
+    @staticmethod
+    def are_poits_in_sight(point_01, point_02, blocks):
+        reaching_line = [
+            point_01,
+            point_02
+        ]
+        
+        return all(
+            [
+                VectorUtils.find_part_lines_intersection(
+                    reaching_line,
+                    block
+                ) is None
+                for block in blocks
+            ]
+        )

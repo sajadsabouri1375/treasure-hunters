@@ -1,20 +1,13 @@
-from players import Player
+from guide_vectors_players import GuideVectorsPlayer
 import numpy as np
 from vector_utils import VectorUtils
 
-class ConstrainedPlayer(Player):
+class ConstrainedPlayer(GuideVectorsPlayer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
         self._map = kwargs.get('map')
         self._boundaries_instruction = kwargs.get('boundaries_instruction')
-        self._number_of_feasible_moving_vectors = kwargs.get('number_of_vectors', 8)
-        self._angle_spacing = 2 * np.pi / self._number_of_feasible_moving_vectors
-        self._feasible_move_vectors = []
-        self._feasible_move_vectors_distances = []
-    
-    def get_feasible_move_vectors(self):
-        return self._feasible_move_vectors
     
     def get_feasible_move_vectors_distances(self):
         return self._feasible_move_vectors_distances
@@ -24,21 +17,7 @@ class ConstrainedPlayer(Player):
     
     def get_map(self):
         return self._map
-    
-    def build_feasible_move_vectors(self):
         
-        if (self._previous_move_vector == np.zeros((1,2))).all():
-            base_vector = np.array([1,0]).reshape(1, -1)
-        else:
-            base_vector = VectorUtils.find_unit_vector(self._previous_move_vector)
-        
-        base_vector_angle = VectorUtils.find_vector_angle(base_vector)
-        
-        self._feasible_move_vectors = [
-            VectorUtils.find_angle_vector(base_vector_angle + i * self._angle_spacing)
-            for i in range(self._number_of_feasible_moving_vectors)
-        ]
-    
     def calculate_distance_to_boundary(self, move_vector):
         move_vector_line = [
             self._current_position,
@@ -72,10 +51,12 @@ class ConstrainedPlayer(Player):
             for distance in self._feasible_move_vectors_distances
         ]
         
-        weighted_feasible_move_vectors = [
+        self._weighted_feasible_move_vectors = [
             weight * move_vector
             for (weight, move_vector) in zip(weights, self._feasible_move_vectors)
         ]
         
-        selected_vector = np.array(weighted_feasible_move_vectors).reshape(self._number_of_feasible_moving_vectors, 2).sum(axis=0)
-        return selected_vector
+        return self._weighted_feasible_move_vectors
+    
+    def did_collide_with_boundaries(self):
+        pass

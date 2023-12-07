@@ -50,9 +50,9 @@ class Protector(ConstrainedPlayer):
             
             treasure_vector_weight = self._treasure_protection_instruction(thtd_to_td)
 
-            next_move_vector = boundaries_move_vector + treasure_vector_weight * treasure_unit_vector + (1-treasure_vector_weight) * treasure_hunter_unit_vector
+            next_move_vector = 10 * boundaries_move_vector + treasure_vector_weight * treasure_unit_vector + (1-treasure_vector_weight) * treasure_hunter_unit_vector
         else:
-            next_move_vector = boundaries_move_vector + 1 * treasure_unit_vector
+            next_move_vector = 10 * boundaries_move_vector + 1 * treasure_unit_vector
             
         # Deduct next move vector according to all vectors
         '''

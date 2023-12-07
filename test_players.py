@@ -11,7 +11,8 @@ class TestPlayers(unittest.TestCase):
             step_size=1,
             next_move_vector=np.ones((1,2)),
             current_position=np.zeros((1,2)),
-            velocity_reduction_inertia_formula=lambda theta: 1
+            velocity_reduction_inertia_formula=lambda theta: 1,
+            inertia_effect=0
         )
         
         # Second player velocity would reduct linearly due to inertia
@@ -19,7 +20,8 @@ class TestPlayers(unittest.TestCase):
             step_size=1,
             next_move_vector=np.ones((1,2)),
             current_position=np.zeros((1,2)),
-            velocity_reduction_inertia_formula=lambda theta: 1 - (1/np.pi) * theta
+            velocity_reduction_inertia_formula=lambda theta: 1 - (1/np.pi) * theta,
+            inertia_effect=0
         )
 
     def test_first_player_movement(self):
