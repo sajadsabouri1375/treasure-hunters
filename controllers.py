@@ -11,8 +11,10 @@ class Controller:
         self._effective_distance = kwargs.get('effective_distance', 0.01)
         self._drawing_assisstant = kwargs.get('drawing_assisstant')
         self._is_treasure_hunted = False
-        self._is_hunter_captured = False
-        self._max_simulation_steps = kwargs.get('max_simulation_steps', 2000)
+        self._is_hunter_arrested = False
+        self._did_hunter_hit_the_boundaries = False
+        self._did_protector_hit_the_boundaries = False
+        self._max_simulation_steps = kwargs.get('max_simulation_steps', 500)
         self._current_simulation_step = 0
         
     def simulate(self):
@@ -26,22 +28,36 @@ class Controller:
         self.update_status()
         
     def is_simulation_done(self):
-        if self._is_hunter_captured or self._is_treasure_hunted or self._current_simulation_step >= self._max_simulation_steps:
-            print(
-                f'Simulation finished with:\nIs hunter captured: {self._is_hunter_captured}\nIs treasure hunted: {self._is_treasure_hunted}'
-            )
+        if self._is_hunter_arrested or self._is_treasure_hunted or self._current_simulation_step >= self._max_simulation_steps or self._did_hunter_hit_the_boundaries or self._did_protector_hit_the_boundaries:
             return True
         return False
     
+    def report_simulation_status(self):
+        print(
+                f'''
+                Players:
+                    Hunter status: {'Dead' if self._did_hunter_hit_the_boundaries else 'Live'}
+                    Protector status: {'Dead' if self._did_protector_hit_the_boundaries else 'Live'}
+                    
+                Simulation finished with:
+                    Is hunter arrested: {self._is_hunter_arrested}
+                    Is treasure hunted: {self._is_treasure_hunted}
+                ''' 
+        )
+        
     def update_status(self):
         if not self._is_treasure_hunted:
-            if VectorUtils.find_distance_between_two_points(self._hunter.get_current_position(), self._treasure.get_current_position()) < self._effective_distance:
-                self._is_treasure_hunted = True
+            self._is_treasure_hunted = self._hunter.did_you_get_treasure(self._treasure, self._effective_distance)
         
-        if not self._is_hunter_captured:
-            if VectorUtils.find_distance_between_two_points(self._hunter.get_current_position(), self._protector.get_current_position()) < self._effective_distance:
-                self._is_hunter_captured = True
+        if not self._is_hunter_arrested:
+            self._is_hunter_arrested = self._hunter.did_protector_arrest_you(self._protector, self._effective_distance)
     
+        if not self._did_hunter_hit_the_boundaries:
+            self._did_hunter_hit_the_boundaries = self._hunter.get_boundaries_hit_status()
+        
+        if not self._did_protector_hit_the_boundaries:
+            self._did_protector_hit_the_boundaries = self._protector.get_boundaries_hit_status()
+
     def update_plot(self):
         self._drawing_assisstant.update_plot()
         

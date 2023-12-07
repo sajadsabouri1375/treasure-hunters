@@ -9,6 +9,10 @@ class Hunter(ConstrainedPlayer):
 
         self._treasure_hunt_instruction = kwargs.get('treasure_hunt_instruction')
         self._theta_effect = kwargs.get('deviation_effect', lambda theta: (np.pi-theta)/np.pi)
+        # self._theta_effect = kwargs.get('deviation_effect', lambda theta: np.exp(-10 * theta))
+        self._is_treasure_hunted = False
+        self._is_hunter_arrested = False
+        self._did_hit_the_boundaries = False
         
     def find_vector_deviations(self, unit_vector):
         return [
@@ -39,7 +43,7 @@ class Hunter(ConstrainedPlayer):
         self.build_feasible_move_vectors()
         
         # Deduct boundaries move vector using constrained player parent
-        boundaries_weights = self.find_boundaries_move_vectors()
+        self.find_boundaries_move_vectors()
         
         # Deduct treasure and treasure protector weight distribution
         treasure_distance = VectorUtils.find_distance_between_two_points(self.get_current_position(), treasure.get_current_position())
@@ -67,12 +71,12 @@ class Hunter(ConstrainedPlayer):
             treasure_protector_weights = self.find_treasure_protector_move_vectors(treasure_protector, weight_treasure_protector)
 
             aggregate_move_vectors = [
-                (treasure_weights[i] + treasure_protector_weights[i]) * boundaries_weights[i] * move_vector
+                (treasure_weights[i] + treasure_protector_weights[i]) * move_vector
                 for i, move_vector in enumerate(self._feasible_move_vectors)
             ]
         else:   
             aggregate_move_vectors = [
-                (treasure_weights[i]) * boundaries_weights[i] * move_vector
+                (treasure_weights[i]) * move_vector
                 for i, move_vector in enumerate(self._feasible_move_vectors)
             ]
 
@@ -87,3 +91,18 @@ class Hunter(ConstrainedPlayer):
         # Deduct next move vector according to all vectors
         self.set_next_move_vector(next_move_vector)
         self.move()
+        self.update_status()
+    
+    def did_you_get_treasure(self, treasure, effective_distance):
+        if not self._is_treasure_hunted:
+            if VectorUtils.find_distance_between_two_points(self.get_current_position(), treasure.get_current_position()) < effective_distance:
+                self._is_treasure_hunted = True
+        return self._is_treasure_hunted
+                
+    def did_protector_arrest_you(self, protector, effective_distance):
+        if not self._is_hunter_arrested:
+            if VectorUtils.find_distance_between_two_points(self.get_current_position(), protector.get_current_position()) < effective_distance:
+                self._is_hunter_arrested = True
+        return self._is_hunter_arrested
+    
+        

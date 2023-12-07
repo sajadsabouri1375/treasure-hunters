@@ -8,8 +8,9 @@ class Protector(ConstrainedPlayer):
         super().__init__(**kwargs)
 
         self._treasure_protection_instruction = kwargs.get('treasure_protection_instruction')
-        self._theta_effect = kwargs.get('deviation_effect', lambda theta: np.exp(-10 * theta))
-              
+        self._theta_effect = kwargs.get('deviation_effect', lambda theta: (np.pi-theta)/np.pi)
+        self._is_live = True
+        
     def find_vector_deviations(self, unit_vector):
         return [
             VectorUtils.find_angle_between_two_vectors(unit_vector, move_vector)
@@ -39,7 +40,7 @@ class Protector(ConstrainedPlayer):
         self.build_feasible_move_vectors()
         
         # Deduct boundaries move vector using constrained player parent
-        boundaries_weights = self.find_boundaries_move_vectors()
+        self.find_boundaries_move_vectors()
         
         # Treasure guide vector
         treasure_distance = VectorUtils.find_distance_between_two_points(self.get_current_position(), treasure.get_current_position())
@@ -67,12 +68,12 @@ class Protector(ConstrainedPlayer):
             treasure_hunter_weights = self.find_treasure_hunter_move_vectors(treasure_hunter, weight_treasure_hunter)
 
             aggregate_move_vectors = [
-                (treasure_weights[i] + treasure_hunter_weights[i]) * boundaries_weights[i] * move_vector
+                (treasure_weights[i] + treasure_hunter_weights[i]) *  move_vector
                 for i, move_vector in enumerate(self._feasible_move_vectors)
             ]
         else:
             aggregate_move_vectors = [
-                (treasure_weights[i]) * boundaries_weights[i] * move_vector
+                (treasure_weights[i]) *  move_vector
                 for i, move_vector in enumerate(self._feasible_move_vectors)
             ]
 
@@ -82,10 +83,10 @@ class Protector(ConstrainedPlayer):
         ]
 
         arg_max = max(range(len(aggregate_move_vectors_length)), key=aggregate_move_vectors_length.__getitem__)  
-        if len(aggregate_move_vectors_length) != 16:
-            print('hi') 
         next_move_vector = aggregate_move_vectors[arg_max if type(arg_max) is not list else arg_max[0]]
         
         # Deduct next move vector according to all vectors
         self.set_next_move_vector(next_move_vector)
         self.move()
+        self.update_status()
+        

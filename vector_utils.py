@@ -12,7 +12,6 @@ class VectorUtils:
         unit_vector = vector / np.linalg.norm(vector)
             
         if np.isnan(unit_vector).any():
-            print(vector)
             raise ZeroDivisionError
         return unit_vector
     
