@@ -12,10 +12,10 @@ class TestVectorUtils(unittest.TestCase):
         self.assertEqual(round(np.sqrt(2)/2, 5), round(unit_vector[0,1], 5))
 
     def test_find_angle_between_two_vectors(self):
-        vector_1 = np.ones((1,2))
-        vector_2 = np.ones((1,2)) * -1
+        vector_1 = np.array([1, 0]).reshape(1, -1)
+        vector_2 = np.array([0, -1]).reshape(1, -1)
         angle = VectorUtils.find_angle_between_two_vectors(vector_1, vector_2)
-        self.assertEqual(np.round(np.pi, 5), np.round(angle, 5))
+        self.assertEqual(np.round(np.pi / 2, 5), np.round(angle, 5))
       
     def test_find_vector_angle(self):
         vector = np.ones((1,2))

@@ -16,25 +16,25 @@ class TestHunters(unittest.TestCase):
         cls._map = Map(map_name='map_box_02')
         
         cls._hunter = Hunter(
-            step_size=0.01,
-            current_position=np.array([0.5, 0.05]).reshape(1, -1),
+            step_size=0.05,
+            current_position=np.array([0.1, 0.05]).reshape(1, -1),
             velocity_reduction_inertia_formula=lambda theta: 1/(1+theta),
-            number_of_vectors=8,
+            number_of_vectors=16,
             map=cls._map,
-            boundaries_instruction=lambda distance: 1 / (1 + np.exp(-100 * (distance - 0.03))),
-            treasure_hunt_instruction=lambda relative_distance: np.exp(-1 * relative_distance),
-            inertia_effect = 2
+            boundaries_instruction=lambda distance: 1 / (1 + np.exp(-0.8 * (distance - 0.01))),
+            treasure_hunt_instruction=lambda relative_distance: np.exp(-0.1 * relative_distance),
+            inertia_effect = 1
         )
         
         cls._protector = Protector(
-            step_size=0.01,
-            current_position=np.array([0.95, 0.05]).reshape(1, -1),
+            step_size=0.05,
+            current_position=np.array([0.95, 0.45]).reshape(1, -1),
             velocity_reduction_inertia_formula=lambda theta: 1/(1+theta),
-            number_of_vectors=8,
+            number_of_vectors=16,
             map=cls._map,
-            boundaries_instruction=lambda distance: 1 / (1 + np.exp(-100 * (distance - 0.03))),
-            treasure_protection_instruction=lambda relative_distance: np.exp(-1 * relative_distance),
-            inertia_effect = 2
+            boundaries_instruction=lambda distance: 1 / (1 + np.exp(-10 * (distance - 0.01))),
+            treasure_protection_instruction=lambda relative_distance: np.exp(-0.2 * relative_distance),
+            inertia_effect = 1
         )
         
         cls._treasure = Treasure(

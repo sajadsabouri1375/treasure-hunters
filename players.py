@@ -15,7 +15,10 @@ class Player:
         return self._current_position
     
     def set_next_move_vector(self, next_move_vector):
-        self._next_move_vector = next_move_vector
+        if np.linalg.norm(next_move_vector) == 0:
+            next_move_vector = self._previous_move_vector.copy()
+        else:
+            self._next_move_vector = next_move_vector
               
     def set_previous_move_vector(self, previous_move_vector):
         self._previous_move_vector = previous_move_vector
@@ -40,9 +43,15 @@ class Player:
         self._previous_position = np.copy(self._current_position)
         
         # Deduct unit next move vector
-        unit_next_move_vector = VectorUtils.find_unit_vector(self._next_move_vector)
-        
+        try:
+            unit_next_move_vector = VectorUtils.find_unit_vector(self._next_move_vector)
+        except:
+            print('hi')
+            
         # Add inertia effect to next move vector
+        if (unit_next_move_vector + self._inertia_effect * self._previous_move_vector).shape != (1, 2):
+            print('hi')
+            
         unit_next_move_vector = VectorUtils.find_unit_vector(unit_next_move_vector + self._inertia_effect * self._previous_move_vector)
         
         # Deduct step size according to inertia velocity reduction formula

@@ -42,8 +42,7 @@ class ConstrainedPlayer(GuideVectorsPlayer):
             for move_vector in self._feasible_move_vectors
         ]
         
-    def find_boundaries_move_vector(self):
-        self.build_feasible_move_vectors()
+    def find_boundaries_move_vectors(self):
         self.build_feasible_move_vectors_distances()
         
         weights = [
@@ -51,12 +50,7 @@ class ConstrainedPlayer(GuideVectorsPlayer):
             for distance in self._feasible_move_vectors_distances
         ]
         
-        self._weighted_feasible_move_vectors = [
-            weight * move_vector
-            for (weight, move_vector) in zip(weights, self._feasible_move_vectors)
-        ]
-        
-        return self._weighted_feasible_move_vectors
+        return weights
     
     def did_collide_with_boundaries(self):
         pass

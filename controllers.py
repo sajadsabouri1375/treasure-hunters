@@ -12,7 +12,7 @@ class Controller:
         self._drawing_assisstant = kwargs.get('drawing_assisstant')
         self._is_treasure_hunted = False
         self._is_hunter_captured = False
-        self._max_simulation_steps = kwargs.get('max_simulation_steps', 1000)
+        self._max_simulation_steps = kwargs.get('max_simulation_steps', 2000)
         self._current_simulation_step = 0
         
     def simulate(self):
