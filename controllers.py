@@ -34,15 +34,15 @@ class Controller:
     
     def report_simulation_status(self):
         print(
-                f'''
-                Players:
-                    Hunter status: {'Dead' if self._did_hunter_hit_the_boundaries else 'Live'}
-                    Protector status: {'Dead' if self._did_protector_hit_the_boundaries else 'Live'}
-                    
-                Simulation finished with:
-                    Is hunter arrested: {self._is_hunter_arrested}
-                    Is treasure hunted: {self._is_treasure_hunted}
-                ''' 
+            f'''
+            Players:
+                Hunter status: {'Dead' if self._did_hunter_hit_the_boundaries else 'Alive'}
+                Protector status: {'Dead' if self._did_protector_hit_the_boundaries else 'Alive'}
+                
+            Simulation finished with:
+                Is hunter arrested: {self._is_hunter_arrested}
+                Is treasure hunted: {self._is_treasure_hunted}
+            ''' 
         )
         
     def update_status(self):

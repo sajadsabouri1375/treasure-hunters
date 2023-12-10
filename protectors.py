@@ -9,7 +9,7 @@ class Protector(ConstrainedPlayer):
 
         self._treasure_protection_instruction = kwargs.get('treasure_protection_instruction')
         self._theta_effect = kwargs.get('deviation_effect', lambda theta: (np.pi-theta)/np.pi)
-        self._is_live = True
+        self._is_alive = True
         
     def find_vector_deviations(self, unit_vector):
         return [

@@ -13,16 +13,16 @@ class TestHunters(unittest.TestCase):
 
     def setUp(cls):
         
-        cls._map = Map(map_name='map_box_02')
+        cls._map = Map(map_name='map_box_03')
         
         cls._hunter = Hunter(
             step_size=0.01,
             current_position=np.array([0.01, 0.55]).reshape(1, -1),
             velocity_reduction_inertia_formula=lambda theta: 1/(1+theta),
-            number_of_vectors=16,
+            number_of_vectors=8,
             map=cls._map,
             boundaries_instruction=lambda distance: 1 / (1 + np.exp(-100 * (distance - 0.1))),
-            treasure_hunt_instruction=lambda relative_distance: np.exp(-0.6 * relative_distance),
+            treasure_hunt_instruction=lambda relative_distance: np.exp(-0.09 * relative_distance),
             inertia_effect = 0
         )
         
@@ -30,7 +30,7 @@ class TestHunters(unittest.TestCase):
             step_size=0.01,
             current_position=np.array([0.95, 0.55]).reshape(1, -1),
             velocity_reduction_inertia_formula=lambda theta: 1/(1+theta),
-            number_of_vectors=16,
+            number_of_vectors=8,
             map=cls._map,
             boundaries_instruction=lambda distance: 1 / (1 + np.exp(-100 * (distance - 0.1))),
             treasure_protection_instruction=lambda relative_distance: np.exp(-0.1 * relative_distance),
