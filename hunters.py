@@ -1,93 +1,50 @@
-from constrained_players import ConstrainedPlayer
+from intelligent_players import IntelligentPlayer
 from vector_utils import VectorUtils
 import numpy as np
 
 
-class Hunter(ConstrainedPlayer):
+class Hunter(IntelligentPlayer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self._treasure_hunt_instruction = kwargs.get('treasure_hunt_instruction')
-        self._theta_effect = kwargs.get('deviation_effect', lambda theta: (np.pi-theta)/np.pi)
-        # self._theta_effect = kwargs.get('deviation_effect', lambda theta: np.exp(-10 * theta))
         self._is_treasure_hunted = False
         self._is_hunter_arrested = False
-        self._did_hit_the_boundaries = False
         
-    def find_vector_deviations(self, unit_vector):
-        return [
-            VectorUtils.find_angle_between_two_vectors(unit_vector, move_vector)
-            for move_vector in self._feasible_move_vectors
-        ]
+    def update_protector_status(self, protector):
+        self._protector_distance, self._protector_move_vector = protector.get_distance_and_move_vector(self.get_current_position)
+                  
+    def deduct_next_move(self, protector, treasure):
         
-    def find_treasure_move_vectors(self, treasure, weight_treasure):
-        treasure_unit_vector = VectorUtils.find_unit_vector(treasure.get_current_position() - self.get_current_position())
-        self._feasible_move_vectors_treasure_deviations = self.find_vector_deviations(treasure_unit_vector)
-        weights = [
-            self._theta_effect(deviation) * weight_treasure
-            for deviation in self._feasible_move_vectors_treasure_deviations
-        ]
-        return weights
-        
-    def find_treasure_protector_move_vectors(self, treasure_protector, wegith_treasure_protector):
-        treasure_protector_unit_vector = VectorUtils.find_unit_vector(-1 * (treasure_protector.get_current_position() - self.get_current_position()))
-        self._feasible_move_vectors_treasure_protector_deviations = self.find_vector_deviations(treasure_protector_unit_vector)
-        weights = [
-            self._theta_effect(deviation) * wegith_treasure_protector
-            for deviation in self._feasible_move_vectors_treasure_protector_deviations
-        ]
-        return weights
-        
-    def deduct_next_move(self, treasure_protector, treasure):
-        
+        # Initiate feasible move vectors 
         self.build_feasible_move_vectors()
         
-        # Deduct boundaries move vector using constrained player parent
-        self.find_boundaries_move_vectors()
+        # Filter move vectors which are too close to blocks
+        self.filter_boundaries_move_vectors()
         
-        # Deduct treasure and treasure protector weight distribution
-        treasure_distance = VectorUtils.find_distance_between_two_points(self.get_current_position(), treasure.get_current_position())
-        
-        is_treasure_protector_in_sight = VectorUtils.are_poits_in_sight(self.get_current_position(), treasure_protector.get_current_position(), self._map.get_boundaries())
-        if is_treasure_protector_in_sight:
-            # TODO -> Treasure protector distance must be in equations somewhere in the future formulation!
-            treasure_protector_distance = VectorUtils.find_distance_between_two_points(self.get_current_position(), treasure_protector.get_current_position())
-            treasure_protector_treasure_distance = VectorUtils.find_distance_between_two_points(treasure.get_current_position(), treasure_protector.get_current_position())
-
-            weight_treasure = self._treasure_hunt_instruction(
-                treasure_distance / treasure_protector_treasure_distance
-            )
-            weight_treasure_protector = 1 - weight_treasure
-        
-        else:
-            weight_treasure = 1
-            weight_treasure_protector = 0
+        # Update treasure status (distance and move vector)
+        if self._treasure_distance is None:
+            self.update_treasure_status(treasure)   
             
-        # Treasure guide vector
-        treasure_weights = self.find_treasure_move_vectors(treasure, weight_treasure)
+        # Update protector status (distance to treasure and move vector)
+        protector_distance, protector_treasure_distance, protector_move_vector = self.find_distance_and_move_vector_to(protector, treasure)
+        
+        if protector_distance != np.inf:
+            protector_move_vector = -1 * protector_move_vector
+        
+        # Deduct weights
+        treasure_weight, protector_weight = self.find_weights(protector_distance != np.inf, protector_treasure_distance)
+        
+        # Apply treasure weight to guide vectors
+        treasure_weights = self.find_treasure_move_vectors(treasure_weight)
         
         # Treasure protector guide vector
-        if is_treasure_protector_in_sight:
-            treasure_protector_weights = self.find_treasure_protector_move_vectors(treasure_protector, weight_treasure_protector)
+        if protector_weight > 0:
+            protector_weights = self.find_other_player_move_vectors(protector_move_vector, protector_weight)
+        else:
+            protector_weights = np.zeros(self._number_of_feasible_moving_vectors)
+            
+        next_move_vector = self.find_max_score_move_vector(treasure_weights, protector_weights)
 
-            aggregate_move_vectors = [
-                (treasure_weights[i] + treasure_protector_weights[i]) * move_vector
-                for i, move_vector in enumerate(self._feasible_move_vectors)
-            ]
-        else:   
-            aggregate_move_vectors = [
-                (treasure_weights[i]) * move_vector
-                for i, move_vector in enumerate(self._feasible_move_vectors)
-            ]
-
-        aggregate_move_vectors_length = [
-            np.linalg.norm(np.zeros((1, 2)) - move_vector)
-            for move_vector in aggregate_move_vectors
-        ]
-
-        arg_max = max(range(len(aggregate_move_vectors_length)), key=aggregate_move_vectors_length.__getitem__)   
-        next_move_vector = aggregate_move_vectors[arg_max if type(arg_max) is not list else arg_max[0]]
-        
         # Deduct next move vector according to all vectors
         self.set_next_move_vector(next_move_vector)
         self.move()

@@ -18,6 +18,9 @@ class Controller:
         self._current_simulation_step = 0
         
     def simulate(self):
+        self._hunter.reset_player()
+        self._protector.reset_player()
+        
         hunter_copy = deepcopy(self._hunter)
         protector_copy = deepcopy(self._protector)
         
