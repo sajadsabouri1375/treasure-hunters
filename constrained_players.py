@@ -60,7 +60,7 @@ class ConstrainedPlayer(GuideVectorsPlayer):
             for move_vector in self._feasible_move_vectors
         ]
         
-    def find_boundaries_move_vectors(self):
+    def filter_boundaries_move_vectors(self):
         self.build_feasible_move_vectors_distances()
         
         strict_weights = [
