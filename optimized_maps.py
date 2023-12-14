@@ -102,7 +102,7 @@ class OptimizedMap(Map):
         
         traversed_vertices.append(vertex_i)
         
-        if vertex_i._shortest_distance != np.inf:
+        if vertex_i._shortest_distance != np.inf and vertex_i._shortest_distance_vector is not None:
             return vertex_i._shortest_distance, vertex_i._shortest_distance_vector
         
         if vertex_i == vertex_j:
@@ -126,7 +126,7 @@ class OptimizedMap(Map):
                 
                 if distance < min_distance:
                     min_distance = distance
-                    min_distance_vector = linked_vertex
+                    min_distance_vector = copy(linked_vertex)
         
         if min_distance < vertex_i._shortest_distance:
             vertex_i._shortest_distance = min_distance
@@ -141,18 +141,6 @@ class OptimizedMap(Map):
             )
     
     def return_vertex_including_position(self, position):
-        
-        # min_distance = np.inf
-        # vertex_of_interest = None
-        
-        # for vertex in self._mesh:
-        #     distance = np.linalg.norm(vertex.get_center() - position)
-            
-        #     if distance < min_distance:
-        #         min_distance = distance
-        #         vertex_of_interest = deepcopy(vertex)
-        
-        # return vertex_of_interest
     
         distances = np.sum(np.square(self._vertices_centers - position), axis=1)
         return self._mesh[distances.argmin()]

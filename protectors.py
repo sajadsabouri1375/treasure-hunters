@@ -49,10 +49,17 @@ class Protector(IntelligentPlayer):
             self.update_treasure_status(treasure)   
         
         # Update hunter status
-        hunter_distance, hunter_treasure_distance, hunter_move_vector = self.find_distance_and_move_vector_to(hunter, treasure)
-
+        if hunter.get_last_position_in_sight() is not None:
+            hunter.set_current_position(hunter.get_last_position_in_sight())
+            hunter_distance, hunter_treasure_distance, hunter_move_vector = self.find_distance_and_move_vector_to(hunter, treasure)
+        else:
+            hunter_distance, hunter_treasure_distance, hunter_move_vector = self.find_distance_and_move_vector_to(hunter, treasure)
+            
         # Deduct weights
-        treasure_weight, hunter_weight = self.find_weights(hunter_distance != np.inf, hunter_treasure_distance)
+        if hunter_distance == np.inf:
+            treasure_weight, hunter_weight = self.find_weights(False, hunter_treasure_distance)
+        else:
+            treasure_weight, hunter_weight = self.find_weights(True, hunter_treasure_distance)
         
         # Apply treasure weight to guide vectors
         treasure_weights = self.find_treasure_move_vectors(treasure_weight)

@@ -10,6 +10,8 @@ class Map:
             maps_configs = json.load(f)
         
         self._map_configs = maps_configs[self._map_name]
+        self._aspect_ratio = (self._map_configs['aspect_ratio']['dx'], self._map_configs['aspect_ratio']['dy'])
+        
         self._map_boundaries = []
         self.build_map()
         
@@ -18,19 +20,24 @@ class Map:
     
     def build_map(self):
         
-        for line, line_properties in self._map_configs.items():
-            point_start = np.array(
-                [
-                    line_properties['start']['x'],
-                    line_properties['start']['y']
-                ]
-            ).reshape(1, -1)
-            point_end = np.array(
-                [
-                    line_properties['end']['x'],
-                    line_properties['end']['y']
-                ]
-            ).reshape(1, -1)
+        for block_name, block_address in self._map_configs['items']['blocks'].items():
             
-            self._map_boundaries.append([point_start, point_end])
+            with open(f'assets/blocks/{block_address}.json') as f:
+                block_properties = json.load(f)
+                
+            for line, line_properties in block_properties.items():
+                point_start = np.array(
+                    [
+                        line_properties['start']['x'],
+                        line_properties['start']['y']
+                    ]
+                ).reshape(1, -1)
+                point_end = np.array(
+                    [
+                        line_properties['end']['x'],
+                        line_properties['end']['y']
+                    ]
+                ).reshape(1, -1)
+            
+                self._map_boundaries.append([point_start, point_end])
             

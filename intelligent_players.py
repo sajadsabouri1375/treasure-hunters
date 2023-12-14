@@ -25,16 +25,20 @@ class IntelligentPlayer(ConstrainedPlayer):
         
     def find_treasure_move_vectors(self, weight_treasure):
         
-        treasure_unit_vector = VectorUtils.find_unit_vector(self._treasure_move_vector)
+        try:
+            treasure_unit_vector = VectorUtils.find_unit_vector(self._treasure_move_vector)
+            
+            deviations = self.find_vector_deviations(treasure_unit_vector)
+            
+            ammortized_weights = [
+                self._theta_effect(deviation) * weight_treasure
+                for deviation in deviations
+            ]
+            
+            return ammortized_weights
         
-        deviations = self.find_vector_deviations(treasure_unit_vector)
-        
-        ammortized_weights = [
-            self._theta_effect(deviation) * weight_treasure
-            for deviation in deviations
-        ]
-        
-        return ammortized_weights
+        except AttributeError:
+            return np.zeros(len(self._feasible_move_vectors))    
     
     def find_other_player_move_vectors(self, other_player_move_vector, other_player_weight):
         
@@ -51,7 +55,8 @@ class IntelligentPlayer(ConstrainedPlayer):
     
     def find_distance_and_move_vector_to(self, player, treasure):
         
-        is_player_in_sight = VectorUtils.are_poits_in_sight(self.get_current_position(), player.get_current_position(), self._map.get_boundaries())
+        is_player_in_sight = VectorUtils.are_points_in_sight(self.get_current_position(), player.get_current_position(), self._map.get_boundaries())
+        # is_player_in_sight = True
         
         if is_player_in_sight:
             
@@ -68,7 +73,7 @@ class IntelligentPlayer(ConstrainedPlayer):
 
     def update_treasure_status(self, treasure):
         
-        is_treasure_in_sight = VectorUtils.are_poits_in_sight(self.get_current_position(), treasure.get_current_position(), self._map.get_boundaries())
+        is_treasure_in_sight = VectorUtils.are_points_in_sight(self.get_current_position(), treasure.get_current_position(), self._map.get_boundaries())
         
         if not is_treasure_in_sight:
             self._treasure_distance, self._treasure_move_vector = self._map.get_distance_and_move_vector(self.get_current_position())

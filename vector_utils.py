@@ -9,6 +9,9 @@ class VectorUtils:
         """
             Returns the unit vector of the vector.  
         """
+        if vector is None:
+            return vector
+        
         unit_vector = vector / np.linalg.norm(vector)
             
         if np.isnan(unit_vector).any():
@@ -27,6 +30,9 @@ class VectorUtils:
             return np.arccos(np.clip(np.dot(unit_vector_1.ravel(), unit_vector_2.ravel()), -1.0, 1.0))
         
         except ZeroDivisionError:
+            return 0
+
+        except AttributeError:
             return 0
         
     @staticmethod
@@ -98,7 +104,7 @@ class VectorUtils:
         return np.linalg.norm(point_01-point_02)
 
     @staticmethod
-    def are_poits_in_sight(point_01, point_02, blocks):
+    def are_points_in_sight(point_01, point_02, blocks):
         reaching_line = [
             point_01,
             point_02
