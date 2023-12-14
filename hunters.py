@@ -26,6 +26,9 @@ class Hunter(IntelligentPlayer):
         # Filter move vectors which are too close to blocks
         self.filter_boundaries_move_vectors()
         
+        # Calculate inertia effect weights
+        self.calculate_inertia_based_weights()
+        
         # Update treasure status (distance and move vector)
         if self._treasure_distance is None:
             self.update_treasure_status(treasure)   
@@ -35,10 +38,10 @@ class Hunter(IntelligentPlayer):
         
         if protector_distance != np.inf:
             protector_move_vector = -1 * protector_move_vector
-            self._last_position_in_sight = self._previous_position
+            self._last_position_in_sight = self._current_position
         
         # Deduct weights
-        treasure_weight, protector_weight = self.find_weights(protector_distance != np.inf, protector_treasure_distance)
+        treasure_weight, protector_weight = self.calculate_treasure_based_weights(protector_distance != np.inf, protector_treasure_distance)
         
         # Apply treasure weight to guide vectors
         treasure_weights = self.find_treasure_move_vectors(treasure_weight)
