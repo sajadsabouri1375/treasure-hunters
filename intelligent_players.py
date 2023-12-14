@@ -10,8 +10,10 @@ class IntelligentPlayer(ConstrainedPlayer):
         
         self._theta_effect = kwargs.get('deviation_effect', lambda theta: (np.pi-theta)/np.pi)
         self._treasure_instruction = kwargs.get('treasure_instruction')
+        self._inertia_instruction = kwargs.get('inertia_instruction', lambda deviation: 1)
         self._treasure_distance = None
         self._treasure_move_vector = None
+        self._inertia_deviation_weights = []
         
     def reset_player(self):
         self._treasure_distance = None
@@ -89,7 +91,7 @@ class IntelligentPlayer(ConstrainedPlayer):
             self.update_treasure_status(treasure)
             return self._treasure_distance
         
-    def find_weights(self, is_player_in_sight, player_distance):
+    def calculate_treasure_based_weights(self, is_player_in_sight, player_distance):
         
         if is_player_in_sight:
             
@@ -106,17 +108,23 @@ class IntelligentPlayer(ConstrainedPlayer):
     
     def find_max_score_move_vector(self, treasure_weights, other_player_weights):
         
-        aggregate_move_vectors = [
-            (treasure_weights[i] + other_player_weights[i]) * move_vector
+        aggregate_weights = [
+            (treasure_weights[i] + other_player_weights[i]) * self._inertia_deviation_weights[i]
             for i, move_vector in enumerate(self._feasible_move_vectors)
         ]
-        
-        aggregate_move_vectors_lengths = [
-            np.linalg.norm(np.zeros((1, 2)) - move_vector)
-            for move_vector in aggregate_move_vectors
-        ]
 
-        arg_max = max(range(len(aggregate_move_vectors_lengths)), key=aggregate_move_vectors_lengths.__getitem__)   
-        next_move_vector = aggregate_move_vectors[arg_max if type(arg_max) is not list else arg_max[0]]
+        arg_max = max(range(len(aggregate_weights)), key=aggregate_weights.__getitem__)   
+        next_move_vector = self._feasible_move_vectors[arg_max if type(arg_max) is not list else arg_max[0]]
         
         return next_move_vector
+    
+    def calculate_inertia_based_weights(self):
+        
+        deviations = self.find_vector_deviations(self._previous_move_vector)
+        
+        self._inertia_deviation_weights = [
+            self._inertia_instruction(deviation)
+            for deviation in deviations
+        ]
+        
+        

@@ -10,8 +10,6 @@ class GuideVectorsPlayer(Player):
         self._number_of_feasible_moving_vectors = kwargs.get('number_of_vectors', 8)
         self._angle_spacing = 2 * np.pi / self._number_of_feasible_moving_vectors
         self._feasible_move_vectors = []
-        self._feasible_move_vectors_distances = []
-        self._weighted_feasible_move_vectors = []
     
     def get_feasible_move_vectors(self):
         return self._feasible_move_vectors

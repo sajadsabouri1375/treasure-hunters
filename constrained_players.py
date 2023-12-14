@@ -9,7 +9,8 @@ class ConstrainedPlayer(GuideVectorsPlayer):
         self._map = kwargs.get('map')
         self._boundaries_instruction = kwargs.get('boundaries_instruction')
         self._did_hit_the_boundaries = False
-        
+        self._feasible_move_vectors_distances = []
+
     def get_feasible_move_vectors_distances(self):
         return self._feasible_move_vectors_distances
     
