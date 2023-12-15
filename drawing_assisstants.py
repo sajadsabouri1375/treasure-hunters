@@ -74,7 +74,7 @@ class DrawingAssisstant:
                 position[0,0],
                 position[0, 1],
                 color='blue',
-                s=15,
+                s=40,
                 alpha=0.9
             )
             self._to_be_removes_elements.append(new_element)
@@ -84,18 +84,28 @@ class DrawingAssisstant:
                 previous_position[0,0],
                 previous_position[0, 1],
                 color='blue',
-                s=5,
+                s=15,
                 alpha=0.4
             )
             self._to_be_removes_elements.append(new_element)
 
+            if player._protector_last_position_in_sight is not None and player._number_of_not_in_sight_escaping < player._number_of_maximum_not_sight_escaping and player._number_of_not_in_sight_escaping > 0:
+                new_element = self._dynamic_axes.scatter(
+                    player._protector_last_position_in_sight[0,0],
+                    player._protector_last_position_in_sight[0, 1],
+                    color='gray',
+                    s=100,
+                    alpha=0.2
+                )
+                self._to_be_removes_elements.append(new_element)
+            
         for player in self._protectors:
             position = player.get_current_position()
             new_element = self._dynamic_axes.scatter(
                 position[0,0],
                 position[0, 1],
                 color='red',
-                s=15,
+                s=40,
                 alpha=0.9
             )
             self._to_be_removes_elements.append(new_element)
@@ -105,7 +115,7 @@ class DrawingAssisstant:
                 previous_position[0,0],
                 previous_position[0, 1],
                 color='red',
-                s=5,
+                s=12,
                 alpha=0.4
             )
             self._to_be_removes_elements.append(new_element)

@@ -7,12 +7,14 @@
         "items":{
             "hunter_shelter": {},
             "blocks":{
-                "container": "container_01",
                 "block_01": "hexagonal_square_center_block",
                 "block_02": "curved_ball_left_top_01",
                 "block_03": "curved_ball_left_bottom_01",
                 "block_04": "curved_ball_left_top_02",
                 "block_05": "curved_ball_left_bottom_02"
+            },
+            "containers": {
+                "container": "container_01"
             }
         }
     }

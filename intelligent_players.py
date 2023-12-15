@@ -55,10 +55,13 @@ class IntelligentPlayer(ConstrainedPlayer):
         
         return ammortized_weights
     
-    def find_distance_and_move_vector_to(self, player, treasure):
+    def find_distance_and_move_vector_to(self, player, treasure, check_in_sight_status=True):
         
-        is_player_in_sight = VectorUtils.are_points_in_sight(self.get_current_position(), player.get_current_position(), self._map.get_boundaries())
-        
+        if check_in_sight_status:
+            is_player_in_sight = VectorUtils.are_points_in_sight(self.get_current_position(), player.get_current_position(), self._map.get_boundaries())
+        else:
+            is_player_in_sight = True
+            
         if is_player_in_sight:
             
             player_distance = VectorUtils.find_distance_between_two_points(self.get_current_position(), player.get_current_position())

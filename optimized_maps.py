@@ -5,8 +5,11 @@ from copy import copy, deepcopy
 import time
 from multiprocessing import Pool
 from vector_utils import VectorUtils
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
 import sys
 sys.setrecursionlimit(10000)
+
 
 class OptimizedMap(Map):
     
@@ -50,12 +53,17 @@ class OptimizedMap(Map):
         # Initiate mesh
         for i in range(n_vertices_along_x):
             for j in range(n_vertices_along_y):
-                self._mesh.append(
-                    Vertex(
+                new_point = Point(vertices_mean_along_x[i], vertices_mean_along_y[j])
+                
+                if not self.is_point_inside_blocks(new_point):
+                    center = np.array([vertices_mean_along_x[i], vertices_mean_along_y[j]])
+                    new_vertex = Vertex(
                         index=(i,j),
-                        center=np.array([vertices_mean_along_x[i], vertices_mean_along_y[j]])
+                        center=center
                     )
-                )
+                    self._mesh.append(
+                        new_vertex
+                    )
                 
         # Initiate mesh neighbors
         for vertex in self._mesh:
