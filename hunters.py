@@ -10,13 +10,12 @@ class Hunter(IntelligentPlayer):
 
         self._is_treasure_hunted = False
         self._is_hunter_arrested = False
-        self._last_position_in_sight = None
+        self._protector_last_position_in_sight = None
+        self._number_of_not_in_sight_escaping = 0
+        self._number_of_maximum_not_sight_escaping = kwargs.get('maximum_escape_time', 200)
         
     def update_protector_status(self, protector):
         self._protector_distance, self._protector_move_vector = protector.get_distance_and_move_vector(self.get_current_position)
-    
-    def get_last_position_in_sight(self):
-        return self._last_position_in_sight
                   
     def deduct_next_move(self, protector, treasure):
         
@@ -38,11 +37,34 @@ class Hunter(IntelligentPlayer):
         
         if protector_distance != np.inf:
             protector_move_vector = -1 * protector_move_vector
-            self._last_position_in_sight = self._current_position
+                
+        # # Deduct weights
+        # treasure_weight, protector_weight = self.calculate_treasure_based_weights(protector_distance != np.inf, protector_treasure_distance)
         
         # Deduct weights
-        treasure_weight, protector_weight = self.calculate_treasure_based_weights(protector_distance != np.inf, protector_treasure_distance)
-        
+        if self._number_of_not_in_sight_escaping >= self._number_of_maximum_not_sight_escaping:
+            self._protector_last_position_in_sight = None
+            self._number_of_not_in_sight_escaping = 0
+            
+        if protector_distance == np.inf and self._protector_last_position_in_sight is None:
+            treasure_weight, protector_weight = self.calculate_treasure_based_weights(False, protector_treasure_distance)
+            
+        elif protector_distance == np.inf and self._protector_last_position_in_sight is not None and self._number_of_not_in_sight_escaping < self._number_of_maximum_not_sight_escaping:
+            protector.set_current_position(self._protector_last_position_in_sight)
+            protector_distance, protector_treasure_distance, protector_move_vector = self.find_distance_and_move_vector_to(
+                protector,
+                treasure,
+                check_in_sight_status=False
+            )
+            protector_move_vector = -1 * protector_move_vector
+            treasure_weight, protector_weight = self.calculate_treasure_based_weights(True, protector_treasure_distance)
+            self._number_of_not_in_sight_escaping += 1
+               
+        elif protector_distance != np.inf:
+            treasure_weight, protector_weight = self.calculate_treasure_based_weights(True, protector_treasure_distance)
+            self._protector_last_position_in_sight = copy(self.get_current_position())
+            self._number_of_not_in_sight_escaping = 0
+            
         # Apply treasure weight to guide vectors
         treasure_weights = self.find_treasure_move_vectors(treasure_weight)
         
@@ -58,7 +80,7 @@ class Hunter(IntelligentPlayer):
         self.set_next_move_vector(next_move_vector)
         self.move()
         self.update_status()
-    
+
     def did_you_get_treasure(self, treasure, effective_distance):
         if not self._is_treasure_hunted:
             if VectorUtils.find_distance_between_two_points(self.get_current_position(), treasure.get_current_position()) < effective_distance:

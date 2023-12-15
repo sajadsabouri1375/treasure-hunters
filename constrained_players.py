@@ -41,13 +41,15 @@ class ConstrainedPlayer(GuideVectorsPlayer):
             
             if intersection is None:
                 continue
+             
+            distance = VectorUtils.find_distance_between_two_points(intersection, self._current_position)
             
-            if VectorUtils.is_point_on_part_line(boundary, intersection):
-                
-                distance = VectorUtils.find_distance_between_two_points(intersection, self._current_position)
-                if distance < min_distance:
-                    min_distance = distance
+            if distance < min_distance:
+                min_distance = distance
     
+        if min_distance == np.inf:
+            print('hi')
+            
         return min_distance
                 
     def build_feasible_move_vectors_distances(self):
@@ -62,6 +64,7 @@ class ConstrainedPlayer(GuideVectorsPlayer):
         ]
         
     def filter_boundaries_move_vectors(self):
+        
         self.build_feasible_move_vectors_distances()
         
         strict_weights = [
