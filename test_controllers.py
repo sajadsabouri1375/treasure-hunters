@@ -27,23 +27,25 @@ class TestHunters(unittest.TestCase):
         
         cls._hunter = Hunter(
             step_size=0.01,
-            current_position=np.array([0.6, 0.5]).reshape(1, -1),
+            current_position=np.array([0.45, 0.8]).reshape(1, -1),
+            next_move_vector=np.array([1, 0]).reshape(1, -1),
             velocity_reduction_inertia_formula=lambda theta: 1/(1+theta),
-            number_of_vectors=16,
+            number_of_vectors=32,
             map=cls._map,
-            boundaries_instruction=lambda distance: 1 / (1 + np.exp(-500 * (distance - 0.05))),
-            treasure_instruction=lambda relative_distance: np.exp(-0.1 * relative_distance),
+            boundaries_instruction=lambda distance: 1 / (1 + np.exp(max(-100 * (distance - 0.08), -700))),
+            treasure_instruction=lambda relative_distance: np.exp(max(-2 * relative_distance, -700)),
             inertia_instruction = lambda deviation: np.exp(-0.08 * deviation),
         )
         
         cls._protector = Protector(
-            step_size=0.01,
-            current_position=np.array([1.5, 0.2]).reshape(1, -1),
+            step_size=0.011,
+            current_position=np.array([1.03, 0.36]).reshape(1, -1),
+            next_move_vector=np.array([-1, 0]).reshape(1, -1),
             velocity_reduction_inertia_formula=lambda theta: 1/(1+theta),
-            number_of_vectors=16,
+            number_of_vectors=32,
             map=cls._map,
-            boundaries_instruction=lambda distance: 1 / (1 + np.exp(-500 * (distance - 0.05))),
-            treasure_instruction=lambda relative_distance: 0,
+            boundaries_instruction=lambda distance: 1 / (1 + np.exp(max(-100 * (distance - 0.08), -700))),
+            treasure_instruction=lambda relative_distance: np.exp(max(-100 * relative_distance, -700)),
             inertia_instruction = lambda deviation: np.exp(-0.08 * deviation),
         )
         # np.exp(-5000000 * relative_distance)

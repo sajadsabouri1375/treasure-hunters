@@ -58,7 +58,6 @@ class IntelligentPlayer(ConstrainedPlayer):
     def find_distance_and_move_vector_to(self, player, treasure):
         
         is_player_in_sight = VectorUtils.are_points_in_sight(self.get_current_position(), player.get_current_position(), self._map.get_boundaries())
-        # is_player_in_sight = True
         
         if is_player_in_sight:
             

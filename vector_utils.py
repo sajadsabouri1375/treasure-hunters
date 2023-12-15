@@ -1,6 +1,7 @@
 from numpy import *
 import numpy as np
-np.seterr(divide='ignore')
+# np.seterr(divide='raise')
+np.seterr(all='raise')
 
 
 class VectorUtils:
@@ -9,13 +10,15 @@ class VectorUtils:
         """
             Returns the unit vector of the vector.  
         """
+        
         if vector is None:
             return vector
         
-        unit_vector = vector / np.linalg.norm(vector)
-            
-        if np.isnan(unit_vector).any():
-            raise ZeroDivisionError
+        try:
+            unit_vector = vector / np.linalg.norm(vector)
+        except:
+            return None
+        
         return unit_vector
     
     @staticmethod
@@ -52,17 +55,62 @@ class VectorUtils:
 
     def find_segment_intersect(a1, a2, b1, b2) :
         
+        # da = a2-a1
+        # db = b2-b1
+        # dp = a1-b1
+        # dap = VectorUtils.perpare_line(da)
+        # denom = dot(dap, db)
+        # num = dot(dap, dp )
+        # intersection = (num / denom.astype(float))*db + b1
+    
         try:
-            da = a2-a1
-            db = b2-b1
-            dp = a1-b1
-            dap = VectorUtils.perpare_line(da)
-            denom = dot( dap, db)
-            num = dot( dap, dp )
-            intersection = (num / denom.astype(float))*db + b1
-            return intersection
-        except Exception as e:
+            m1 = (a2[1] - a1[1]) / (a2[0] - a1[0])
+        except:
+            m1 = np.inf
+        
+        try:
+            m2 = (b2[1] - b1[1]) / (b2[0] - b1[0])
+        except:
+            m2 = np.inf
+        
+        if m1 == np.inf:
+            intercept1 = np.inf
+        else:
+            intercept1 = a1[1] - m1 * a1[0]
+            
+        if m2 == np.inf:
+            intercept2 = np.inf
+        else:
+            intercept2 = b1[1] - m2 * b1[0]
+        
+        if m1 != np.inf and m2 != np.inf:
+            
+            if m1 == m2:
+                return None
+            
+            else:
+                x_intersection = (intercept2 - intercept1) / (m1 - m2)
+                y_intersection = m1 * x_intersection + intercept1
+            
+        elif m1 == np.inf and m2 != np.inf:
+            x_intersection = a1[0]
+            y_intersection = m2 * x_intersection + intercept2
+        
+        elif m1 != np.inf and m2 == np.inf:
+            x_intersection = b1[0]
+            y_intersection = m1 * x_intersection + intercept1
+        
+        elif m1 == np.inf and m2 == np.inf:
             return None
+        
+        intersection = np.array(
+            [
+                x_intersection,
+                y_intersection
+            ]
+        )
+
+        return intersection
     
     @staticmethod
     def find_lines_intersection(line_01, line_02):
@@ -71,6 +119,7 @@ class VectorUtils:
         end_01 = line_01[1].ravel()
         start_02 = line_02[0].ravel()
         end_02 = line_02[1].ravel()
+        
         return VectorUtils.find_segment_intersect(start_01, end_01, start_02, end_02)
     
     @staticmethod
@@ -82,7 +131,9 @@ class VectorUtils:
         line_x_max = max(line_point_01[0], line_point_02[0])
         line_y_min = min(line_point_01[1], line_point_02[1])
         line_y_max = max(line_point_01[1], line_point_02[1])
-        if (line_x_min <= point[0] <= line_x_max) and (line_y_min <= point[1] <= line_y_max):
+        
+        
+        if ((point[0] - line_x_min) >= -0.0000001) and ((line_x_max - point[0]) >= -0.0000001) and ((point[1] - line_y_min) >= -0.0000001) and ((line_y_max - point[1]) >= -0.0000001):
             return True
 
         return False

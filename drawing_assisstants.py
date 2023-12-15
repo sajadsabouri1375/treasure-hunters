@@ -116,8 +116,9 @@ class DrawingAssisstant:
             position[0,0], 
             position[0,1],
             color='magenta',
-            linewidth=4,
-            alpha=0.8
+            marker='1',
+            alpha=0.8,
+            s=400
         )
     
     def remove_dynamic_elements(self):
