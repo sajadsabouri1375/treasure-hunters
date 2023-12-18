@@ -14,23 +14,11 @@ class ConstrainedPlayer(GuideVectorsPlayer):
     def get_feasible_move_vectors_distances(self):
         return self._feasible_move_vectors_distances
     
-    def set_boundaries_instruction(self, new_instruction):
-        self._boundaries_instruction = new_instruction
-    
     def get_map(self):
         return self._map
     
-    def did_hit_the_boundaries(self, move_vector_part_line):
-        for boundary in self._map.get_boundaries():
-            
-            intersection = VectorUtils.find_part_lines_intersection(boundary, move_vector_part_line)
-            
-            if intersection is None:
-                continue
-            else:
-                return True
-            
-        return False
+    def set_boundaries_instruction(self, new_instruction):
+        self._boundaries_instruction = new_instruction
             
     def calculate_distance_to_boundary(self, move_vector_part_line):
                 
@@ -82,14 +70,21 @@ class ConstrainedPlayer(GuideVectorsPlayer):
             )
         )
     
-    def update_status(self):
-        if not self._did_hit_the_boundaries:
-            previous_move_vector_line = [
-                self.get_previous_position(),
-                self.get_current_position()
-            ]
+    def are_you_alive(self):
+        
+        previous_move_vector_line = [
+            self.get_previous_position(),
+            self.get_current_position()
+        ]
+    
+        for boundary in self._map.get_boundaries():
             
-            self._did_hit_the_boundaries = self.did_hit_the_boundaries(previous_move_vector_line)
+            intersection = VectorUtils.find_part_lines_intersection(boundary, previous_move_vector_line)
             
-    def get_boundaries_hit_status(self):
-        return self._did_hit_the_boundaries
+            if intersection is None:
+                continue
+            else:
+                return False
+            
+        return True
+                 

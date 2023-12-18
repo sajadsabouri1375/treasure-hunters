@@ -2,17 +2,44 @@ from intelligent_players import IntelligentPlayer
 from vector_utils import VectorUtils
 import numpy as np
 from copy import copy
+from enum import Enum
+from colorama import Fore
 
+class ProtectorState(Enum):
+    CAPTURING_HUNTER = 1
+    RESCUING_TREASURE = 2
+    CAPTURED_HUNTER = 3
+    DEAD = 4
+    LOST_TREASURE = 5
 
 class Protector(IntelligentPlayer):
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         self._theta_effect = kwargs.get('deviation_effect', lambda theta: (np.pi-theta)/np.pi)
+
+        # Default values for a new protector
         self._is_alive = True
         self._hunter_last_position_in_sight = None
         self._number_of_not_in_sight_chasing = 0
         self._number_of_maximum_not_sight_chasing = kwargs.get('maximum_chase_time', 200)
+        self._state = ProtectorState.CAPTURING_HUNTER
+    
+    def get_state(self):
+        return self._state
+    
+    def get_state_string(self):
+        if self._state == ProtectorState.CAPTURING_HUNTER:
+            return f'{Fore.CYAN}Capturing{Fore.RESET}'
+        elif self._state == ProtectorState.RESCUING_TREASURE:
+            return f'{Fore.MAGENTA}Rescuing Treasure{Fore.RESET}'
+        elif self._state == ProtectorState.CAPTURED_HUNTER:
+            return f'{Fore.GREEN}Captured Hunter{Fore.RESET}'
+        elif self._state == ProtectorState.DEAD:
+            return f'{Fore.LIGHTRED_EX}Dead{Fore.RESET}'
+        elif self._state == ProtectorState.LOST_TREASURE:
+            return f'{Fore.RED}Safe{Fore.RESET}'
         
     def find_vector_deviations(self, unit_vector):
         return [
@@ -40,7 +67,13 @@ class Protector(IntelligentPlayer):
         ]
         return weights
         
-    def deduct_next_move(self, hunter, treasure):
+    def deduct_next_move(self, hunter, treasure, shelter, effective_distance):
+        
+        # Update state according to previous moves
+        self.update_state(hunter, treasure, shelter, effective_distance)
+                          
+        if not self.shall_we_go_on():
+            return
         
         # Initiate feasible move vectors 
         self.build_feasible_move_vectors()
@@ -95,4 +128,36 @@ class Protector(IntelligentPlayer):
         # Deduct next move vector according to all vectors
         self.set_next_move_vector(next_move_vector)
         self.move()
-        self.update_status()
+
+    def shall_we_go_on(self):
+
+        if self._state in [ProtectorState.CAPTURING_HUNTER, ProtectorState.RESCUING_TREASURE]:
+            return True
+        return False
+    
+    def update_state(self, hunter, treasure, shelter, effective_distance):
+        
+        if not self.are_you_alive():
+            self._state == ProtectorState.DEAD 
+            return
+    
+        if self.did_you_lose_treasure(hunter, treasure, effective_distance):
+            self._state = ProtectorState.LOST_TREASURE
+            return
+        
+        if self.did_you_capture_hunter(hunter, effective_distance):
+            self._state = ProtectorState.CAPTURED_HUNTER
+            return   
+    
+    def did_you_capture_hunter(self, hunter, effective_distance):
+        
+        if VectorUtils.find_distance_between_two_points(self.get_current_position(), hunter.get_current_position()) < effective_distance:
+            return True
+        return False
+    
+    def did_you_lose_treasure(self, hunter, treasure, effective_distance):
+        
+        if VectorUtils.find_distance_between_two_points(hunter.get_current_position(), treasure.get_current_position()) < effective_distance:
+            return True
+        return False
+    

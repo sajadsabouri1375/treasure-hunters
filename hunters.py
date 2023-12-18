@@ -2,22 +2,55 @@ from intelligent_players import IntelligentPlayer
 from vector_utils import VectorUtils
 import numpy as np
 from copy import copy
+from enum import Enum
+from colorama import Fore
 
+class HunterState(Enum):
+    HUNTING_TREASURE = 1
+    RETURNING_TO_SHELTER = 2
+    CAPTURED = 3
+    DEAD = 4
+    SAFE = 5
 
 class Hunter(IntelligentPlayer):
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        self._number_of_maximum_not_sight_escaping = kwargs.get('maximum_escape_time', 200)
+
+        # Default values for a new hunter
         self._is_treasure_hunted = False
         self._is_hunter_arrested = False
         self._protector_last_position_in_sight = None
         self._number_of_not_in_sight_escaping = 0
-        self._number_of_maximum_not_sight_escaping = kwargs.get('maximum_escape_time', 200)
+        self._state = HunterState.HUNTING_TREASURE
+    
+    def get_state(self):
+        return self._state
+    
+    def get_state_string(self):
+        if self._state == HunterState.HUNTING_TREASURE:
+            return f'{Fore.CYAN}Hunting{Fore.RESET}'
+        elif self._state == HunterState.RETURNING_TO_SHELTER:
+            return f'{Fore.LIGHTGREEN_EX}Returning To Shelter{Fore.RESET}'
+        elif self._state == HunterState.CAPTURED:
+            return f'{Fore.RED}Captured By Protector{Fore.RESET}'
+        elif self._state == HunterState.DEAD:
+            return f'{Fore.LIGHTRED_EX}Dead{Fore.RESET}'
+        elif self._state == HunterState.SAFE:
+            return f'{Fore.GREEN}Safe{Fore.RESET}'
         
     def update_protector_status(self, protector):
         self._protector_distance, self._protector_move_vector = protector.get_distance_and_move_vector(self.get_current_position)
                   
-    def deduct_next_move(self, protector, treasure):
+    def deduct_next_move(self, protector, treasure, shelter, effective_distance):
+        
+        # Update state after the previous move
+        self.update_state(protector, treasure, shelter, effective_distance)
+        
+        if not self.shall_we_go_on():
+            return
         
         # Initiate feasible move vectors 
         self.build_feasible_move_vectors()
@@ -37,10 +70,7 @@ class Hunter(IntelligentPlayer):
         
         if protector_distance != np.inf:
             protector_move_vector = -1 * protector_move_vector
-                
-        # # Deduct weights
-        # treasure_weight, protector_weight = self.calculate_treasure_based_weights(protector_distance != np.inf, protector_treasure_distance)
-        
+                        
         # Deduct weights
         if self._number_of_not_in_sight_escaping >= self._number_of_maximum_not_sight_escaping:
             self._protector_last_position_in_sight = None
@@ -79,18 +109,47 @@ class Hunter(IntelligentPlayer):
         # Deduct next move vector according to all vectors
         self.set_next_move_vector(next_move_vector)
         self.move()
-        self.update_status()
 
-    def did_you_get_treasure(self, treasure, effective_distance):
-        if not self._is_treasure_hunted:
-            if VectorUtils.find_distance_between_two_points(self.get_current_position(), treasure.get_current_position()) < effective_distance:
-                self._is_treasure_hunted = True
-        return self._is_treasure_hunted
-                
-    def did_protector_arrest_you(self, protector, effective_distance):
-        if not self._is_hunter_arrested:
-            if VectorUtils.find_distance_between_two_points(self.get_current_position(), protector.get_current_position()) < effective_distance:
-                self._is_hunter_arrested = True
-        return self._is_hunter_arrested
+    def shall_we_go_on(self):
+
+        if self._state in [HunterState.HUNTING_TREASURE, HunterState.RETURNING_TO_SHELTER]:
+            return True
+        return False
     
+    def update_state(self, protector, treasure, shelter, effective_distance):
         
+        if not self.are_you_alive():
+            self._state == HunterState.DEAD 
+            return
+    
+        if self.are_you_captured(protector, effective_distance):
+            self._state = HunterState.CAPTURED
+            return
+            
+        if not self._state == HunterState.RETURNING_TO_SHELTER:
+            if self.did_you_capture_treasure(treasure, effective_distance):
+                self._state = HunterState.RETURNING_TO_SHELTER
+                return 
+        
+        if not self._state == HunterState.RETURNING_TO_SHELTER:
+            if self.did_you_make_it_to_shelter(shelter, effective_distance):
+                self._state = HunterState.SAFE
+                return    
+    
+    def did_you_capture_treasure(self, treasure, effective_distance):
+        
+        if VectorUtils.find_distance_between_two_points(self.get_current_position(), treasure.get_current_position()) < effective_distance:
+            return True
+        return False
+
+    def are_you_captured(self, protector, effective_distance):
+        
+        if VectorUtils.find_distance_between_two_points(self.get_current_position(), protector.get_current_position()) < effective_distance:
+            return True
+        return False
+        
+    def did_you_make_it_to_shelter(self, shelter, effective_distance):
+        
+        if VectorUtils.find_distance_between_two_points(self.get_current_position(), shelter.get_position()) < effective_distance:
+            return True
+        return False
