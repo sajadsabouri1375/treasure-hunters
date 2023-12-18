@@ -14,36 +14,37 @@ class TestHunters(unittest.TestCase):
     def setUp(cls):
         
         cls._treasure = Treasure(
-            current_position=np.array([1.5, 0.45]).reshape(1, -1),
+            current_position=np.array([1.5, 0.05]).reshape(1, -1),
             is_hunted=False
         )
         
         cls._shelter = Shelter(
-            position=np.array([0.1, 0.45]).reshape(1, -1)
+            position=np.array([1.5, 0.05]).reshape(1, -1)
         )
                 
         cls._map = OptimizedMap(
             map_name='map_01',
-            point_of_interest=cls._treasure.get_current_position(),
-            vertex_size = 0.07
+            treasure=cls._treasure.get_current_position(),
+            shelter=cls._shelter.get_position(),
+            vertex_size = 0.16
         )
         cls._map.optimize_routes()
         
         cls._hunter = Hunter(
             step_size=0.01,
-            current_position=np.array([0.2, 0.85]).reshape(1, -1),
+            current_position=np.array([1.1, 0.4]).reshape(1, -1),
             next_move_vector=np.array([-1, 0]).reshape(1, -1),
             velocity_reduction_inertia_formula=lambda theta: 1/(1+theta),
             number_of_vectors=16,
             map=cls._map,
             boundaries_instruction=lambda distance: 1 / (1 + np.exp(max(-100 * (distance - 0.03), -700))),
-            treasure_instruction=lambda relative_distance: np.exp(max(-1 * relative_distance, -700)),
+            treasure_instruction=lambda relative_distance: np.exp(max(-0.005 * relative_distance, -700)),
             inertia_instruction = lambda deviation: np.exp(-0.1 * deviation),
             maximum_escape_time=20
         )
         
         cls._protector = Protector(
-            step_size=0.015,
+            step_size=0.007,
             current_position=np.array([1.3, 0.45]).reshape(1, -1),
             next_move_vector=np.array([-1, 0]).reshape(1, -1),
             velocity_reduction_inertia_formula=lambda theta: 1/(1+theta),
@@ -59,7 +60,8 @@ class TestHunters(unittest.TestCase):
             map=cls._map,
             hunters=[cls._hunter],
             protectors=[cls._protector],
-            treasure=cls._treasure
+            treasure=cls._treasure,
+            shelter=cls._shelter
         )
         
         cls._controller = Controller(

@@ -39,7 +39,7 @@ class Protector(IntelligentPlayer):
         elif self._state == ProtectorState.DEAD:
             return f'{Fore.LIGHTRED_EX}Dead{Fore.RESET}'
         elif self._state == ProtectorState.LOST_TREASURE:
-            return f'{Fore.RED}Safe{Fore.RESET}'
+            return f'{Fore.RED}Lost{Fore.RESET}'
         
     def find_vector_deviations(self, unit_vector):
         return [
@@ -141,9 +141,15 @@ class Protector(IntelligentPlayer):
             self._state == ProtectorState.DEAD 
             return
     
-        if self.did_you_lose_treasure(hunter, treasure, effective_distance):
-            self._state = ProtectorState.LOST_TREASURE
-            return
+        if self._state == ProtectorState.CAPTURING_HUNTER:
+            if self.did_hunter_hunt_treasure(hunter, treasure, effective_distance):
+                self._state = ProtectorState.RESCUING_TREASURE
+                return
+            
+        if self._state == ProtectorState.RESCUING_TREASURE:
+            if self.did_you_lose_treasure(hunter, shelter, effective_distance):
+                self._state = ProtectorState.LOST_TREASURE
+                return
         
         if self.did_you_capture_hunter(hunter, effective_distance):
             self._state = ProtectorState.CAPTURED_HUNTER
@@ -155,9 +161,15 @@ class Protector(IntelligentPlayer):
             return True
         return False
     
-    def did_you_lose_treasure(self, hunter, treasure, effective_distance):
+    def did_hunter_hunt_treasure(self, hunter, treasure, effective_distance):
         
         if VectorUtils.find_distance_between_two_points(hunter.get_current_position(), treasure.get_current_position()) < effective_distance:
+            return True
+        return False
+    
+    def did_you_lose_treasure(self, hunter, shelter, effective_distance):
+        
+        if VectorUtils.find_distance_between_two_points(hunter.get_current_position(), shelter.get_position()) < effective_distance:
             return True
         return False
     
