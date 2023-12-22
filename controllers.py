@@ -1,66 +1,115 @@
 from copy import deepcopy
 from vector_utils import VectorUtils
+from hunters import Hunter, HunterState
+from protectors import Protector, ProtectorState
+from drawing_assisstants import DrawingAssisstant
+from enum import Enum
+from colorama import Fore
 
+class GameDetailedState(Enum):
+    TREASURE_HUNT = 1
+    RETURNING_TO_SHELTER = 2
+    HUNTER_IS_SAFE = 3
+    HUNTER_IS_CAPTURED = 4
+    EITHER_DEAD = 5
+    
+class GameGeneralState(Enum):
+    HUNTER_WON = 1
+    PROTECTOR_WON = 2
+    IN_PROGRESS = 3
+    DRAW = 4
 
 class Controller:
     def __init__(self, **kwargs):
-        self._hunter = kwargs.get('hunter')
-        self._protector = kwargs.get('protector')
+        self._hunter:Hunter = kwargs.get('hunter')
+        self._protector:Protector = kwargs.get('protector')
         self._treasure = kwargs.get('treasure')
+        self._shelter = kwargs.get('shelter')
         self._map = kwargs.get('map')
         self._effective_distance = kwargs.get('effective_distance', 0.01)
-        self._drawing_assisstant = kwargs.get('drawing_assisstant')
-        self._is_treasure_hunted = False
-        self._is_hunter_arrested = False
-        self._did_hunter_hit_the_boundaries = False
-        self._did_protector_hit_the_boundaries = False
+        self._drawing_assisstant:DrawingAssisstant = kwargs.get('drawing_assisstant')
         self._max_simulation_steps = kwargs.get('max_simulation_steps', 500)
+
+        # Default values for a new game
         self._current_simulation_step = 0
+        self._game_general_state = GameGeneralState.IN_PROGRESS
+        self._game_detailed_state = GameDetailedState.TREASURE_HUNT
+    
+    def get_state(self):
+        return self._game_general_state
+    
+    def get_state_string(self):
+        if self._game_general_state == GameGeneralState.HUNTER_WON:
+            return f'{Fore.GREEN}Hunter Won{Fore.RESET}'
+        elif self._game_general_state == GameGeneralState.PROTECTOR_WON:
+            return f'{Fore.RED}Protector Won{Fore.RESET}'
+        elif self._game_detailed_state == GameGeneralState.DRAW:
+            return f'{Fore.LIGHTBLACK_EX}DRAW{Fore.RESET}'
+        elif self._game_general_state == GameGeneralState.IN_PROGRESS:
+            return f'{Fore.CYAN}In Progress{Fore.RESET}'
         
     def simulate(self):
+
+        if not self.shall_we_go_on():
+            return
+        
         self._hunter.reset_player()
         self._protector.reset_player()
         
         hunter_copy = deepcopy(self._hunter)
         protector_copy = deepcopy(self._protector)
         
-        self._hunter.deduct_next_move(protector_copy, self._treasure)
-        self._protector.deduct_next_move(hunter_copy, self._treasure)
+        self._hunter.deduct_next_move(protector_copy, self._treasure, self._shelter, self._effective_distance)
+        self._protector.deduct_next_move(hunter_copy, self._treasure, self._shelter, self._effective_distance)
         
         self._current_simulation_step += 1
-        self.update_status()
-        
-    def is_simulation_done(self):
-        if self._is_hunter_arrested or self._is_treasure_hunted or self._current_simulation_step >= self._max_simulation_steps or self._did_hunter_hit_the_boundaries or self._did_protector_hit_the_boundaries:
-            return True
-        return False
+        self.update_game_state()
     
     def report_simulation_status(self):
         print(
             f'''
-            Players:
-                Hunter status: {'Dead' if self._did_hunter_hit_the_boundaries else 'Alive'}
-                Protector status: {'Dead' if self._did_protector_hit_the_boundaries else 'Alive'}
+            {Fore.BLUE}Players{Fore.RESET}:
+                Hunter State: {self._hunter.get_state_string()}
+                Protector State: {self._protector.get_state_string()}
                 
-            Simulation finished with:
-                Is hunter arrested: {self._is_hunter_arrested}
-                Is treasure hunted: {self._is_treasure_hunted}
+            {Fore.BLUE}Simulation finished with{Fore.RESET}:
+                {self.get_state_string()}
             ''' 
         )
-        
-    def update_status(self):
-        if not self._is_treasure_hunted:
-            self._is_treasure_hunted = self._hunter.did_you_get_treasure(self._treasure, self._effective_distance)
-        
-        if not self._is_hunter_arrested:
-            self._is_hunter_arrested = self._hunter.did_protector_arrest_you(self._protector, self._effective_distance)
     
-        if not self._did_hunter_hit_the_boundaries:
-            self._did_hunter_hit_the_boundaries = self._hunter.get_boundaries_hit_status()
+    def shall_we_go_on(self):
+    
+        if self._game_general_state != GameGeneralState.IN_PROGRESS or self._current_simulation_step >= self._max_simulation_steps:
+            return False
+        return True
+    
+    def update_game_state(self):
+        hunter_state = self._hunter.get_state()
+        protector_state = self._protector.get_state()
         
-        if not self._did_protector_hit_the_boundaries:
-            self._did_protector_hit_the_boundaries = self._protector.get_boundaries_hit_status()
+        if hunter_state == HunterState.DEAD and not protector_state == ProtectorState.DEAD:
+            self._game_general_state = GameGeneralState.PROTECTOR_WON
+            self._game_detailed_state = GameDetailedState.EITHER_DEAD
+            
+        elif not hunter_state == HunterState.DEAD and protector_state == ProtectorState.DEAD:
+            self._game_general_state = GameGeneralState.HUNTER_WON
+            self._game_detailed_state = GameDetailedState.EITHER_DEAD
 
+        elif hunter_state == HunterState.DEAD and protector_state == ProtectorState.DEAD:
+            self._game_general_state = GameGeneralState.DRAW
+            self._game_detailed_state = GameDetailedState.EITHER_DEAD
+        
+        elif hunter_state == HunterState.CAPTURED and protector_state == ProtectorState.CAPTURED_HUNTER:
+            self._game_general_state = GameGeneralState.PROTECTOR_WON
+            self._game_detailed_state = GameDetailedState.HUNTER_IS_CAPTURED
+        
+        elif hunter_state == HunterState.RETURNING_TO_SHELTER and protector_state == ProtectorState.RESCUING_TREASURE:
+            self._game_detailed_state = GameDetailedState.RETURNING_TO_SHELTER
+            
+        elif hunter_state == HunterState.SAFE and protector_state == ProtectorState.LOST_TREASURE:
+            self._game_general_state = GameGeneralState.HUNTER_WON
+            self._game_detailed_state = GameDetailedState.HUNTER_IS_SAFE
+                     
     def update_plot(self):
         self._drawing_assisstant.update_plot()
         

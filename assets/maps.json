@@ -11,7 +11,9 @@
                 "block_02": "curved_ball_left_top_01",
                 "block_03": "curved_ball_left_bottom_01",
                 "block_04": "curved_ball_left_top_02",
-                "block_05": "curved_ball_left_bottom_02"
+                "block_05": "curved_ball_left_bottom_02",
+                "block_06": "curved_ball_right_top_01",
+                "block_07": "curved_ball_right_bottom_01"
             },
             "containers": {
                 "container": "container_01"

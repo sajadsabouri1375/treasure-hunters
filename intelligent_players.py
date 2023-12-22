@@ -13,11 +13,15 @@ class IntelligentPlayer(ConstrainedPlayer):
         self._inertia_instruction = kwargs.get('inertia_instruction', lambda deviation: 1)
         self._treasure_distance = None
         self._treasure_move_vector = None
+        self._shelter_distance = None
+        self._shelter_move_vector = None
         self._inertia_deviation_weights = []
         
     def reset_player(self):
         self._treasure_distance = None
         self._treasure_move_vector = None
+        self._shelter_distance = None
+        self._shelter_move_vector = None
         
     def find_vector_deviations(self, unit_vector):
         return [
@@ -42,6 +46,23 @@ class IntelligentPlayer(ConstrainedPlayer):
         except AttributeError:
             return np.zeros(len(self._feasible_move_vectors))    
     
+    def find_shelter_move_vectors(self, shelter_weight):
+        
+        try:
+            shelter_unit_vector = VectorUtils.find_unit_vector(self._shelter_move_vector)
+            
+            deviations = self.find_vector_deviations(shelter_unit_vector)
+            
+            ammortized_weights = [
+                self._theta_effect(deviation) * shelter_weight
+                for deviation in deviations
+            ]
+            
+            return ammortized_weights
+        
+        except AttributeError:
+            return np.zeros(len(self._feasible_move_vectors))  
+        
     def find_other_player_move_vectors(self, other_player_move_vector, other_player_weight):
         
         other_player_unit_vector = VectorUtils.find_unit_vector(other_player_move_vector)
@@ -65,7 +86,7 @@ class IntelligentPlayer(ConstrainedPlayer):
         if is_player_in_sight:
             
             player_distance = VectorUtils.find_distance_between_two_points(self.get_current_position(), player.get_current_position())
-            player_treasure_distance = player.get_treasure_distance(treasure)
+            player_treasure_distance = player.get_treasure_distance(treasure.get_current_position())
             move_vector = player.get_current_position() - self.get_current_position()
             
         else:
@@ -75,38 +96,79 @@ class IntelligentPlayer(ConstrainedPlayer):
         
         return player_distance, player_treasure_distance, move_vector
 
-    def update_treasure_status(self, treasure):
+    def find_distance_and_move_vector_to_shelter(self, player, shelter, check_in_sight_status=True):
         
-        is_treasure_in_sight = VectorUtils.are_points_in_sight(self.get_current_position(), treasure.get_current_position(), self._map.get_boundaries())
-        
-        if not is_treasure_in_sight:
-            self._treasure_distance, self._treasure_move_vector = self._map.get_distance_and_move_vector(self.get_current_position())
+        if check_in_sight_status:
+            is_player_in_sight = VectorUtils.are_points_in_sight(self.get_current_position(), player.get_current_position(), self._map.get_boundaries())
+        else:
+            is_player_in_sight = True
+            
+        if is_player_in_sight:
+            
+            player_distance = VectorUtils.find_distance_between_two_points(self.get_current_position(), player.get_current_position())
+            player_shelter_distance = player.get_shelter_distance(shelter)
+            move_vector = player.get_current_position() - self.get_current_position()
             
         else:
-            self._treasure_distance = VectorUtils.find_distance_between_two_points(self.get_current_position(), treasure.get_current_position())
-            self._treasure_move_vector = treasure.get_current_position() - self.get_current_position()  
+            player_distance = np.inf
+            player_shelter_distance = np.inf
+            move_vector = None
+        
+        return player_distance, player_shelter_distance, move_vector
     
+    def update_treasure_status(self, treasure_position):
+        
+        self._is_treasure_in_sight = VectorUtils.are_points_in_sight(self.get_current_position(), treasure_position, self._map.get_boundaries())
+        
+        if not self._is_treasure_in_sight:
+            self._treasure_distance, self._treasure_move_vector = self._map.get_distance_and_move_vector(self.get_current_position(), 'treasure')
+            
+        else:
+            self._treasure_distance = VectorUtils.find_distance_between_two_points(self.get_current_position(), treasure_position)
+            self._treasure_move_vector = treasure_position - self.get_current_position()  
+    
+    def update_shelter_status(self, shelter):
+        
+        is_shelter_in_sight = VectorUtils.are_points_in_sight(self.get_current_position(), shelter.get_position(), self._map.get_boundaries())
+        
+        if not is_shelter_in_sight:
+            self._shelter_distance, self._shelter_move_vector = self._map.get_distance_and_move_vector(self.get_current_position(), 'shelter')
+            
+        else:
+            self._shelter_distance = VectorUtils.find_distance_between_two_points(self.get_current_position(), shelter.get_position())
+            self._shelter_move_vector = shelter.get_position() - self.get_current_position()  
+            
     def get_treasure_distance(self, treasure):
         if self._treasure_distance is not None:
             return self._treasure_distance
         else:
             self.update_treasure_status(treasure)
             return self._treasure_distance
-        
-    def calculate_treasure_based_weights(self, is_player_in_sight, player_distance):
-        
-        if is_player_in_sight:
-            
-            treasure_weight = self._treasure_instruction(
-                self._treasure_distance / player_distance
-            )
-            player_weight = 1 - treasure_weight
-        
+    
+    def get_shelter_distance(self, shelter):
+        if self._shelter_distance is not None:
+            return self._shelter_distance
         else:
-            treasure_weight = 1
-            player_weight = 0
+            self.update_shelter_status(shelter)
+            return self._shelter_distance
+        
+    def calculate_treasure_based_weights(self, player_distance):
+        
+        treasure_weight = self._treasure_instruction(
+            self._treasure_distance / player_distance
+        )
+        player_weight = 1 - treasure_weight
             
         return treasure_weight, player_weight
+    
+    def calculate_shelter_based_weights(self, player_distance):
+        
+        shelter_weight = self._treasure_instruction(
+            self._shelter_distance / player_distance
+        )
+        player_weight = 1 - shelter_weight
+            
+        return shelter_weight, player_weight
     
     def find_max_score_move_vector(self, treasure_weights, other_player_weights):
         

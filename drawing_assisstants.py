@@ -5,15 +5,19 @@ plt.ion()
 class DrawingAssisstant:
     def __init__(self, **kwargs):
         
-        self._instructions = kwargs.get('instructions', {'plot_mesh': False, 'plot_boundaries': True, 'plot_players': True, 'plot_treasure': True})
         plt.ion()
-        self._figure = plt.figure(figsize=(25.6, 14.4))
-        self._static_axes = plt.gca()
-        self._dynamic_axes = plt.gca()
+
+        self._instructions = kwargs.get('instructions', {'plot_mesh': False, 'plot_boundaries': True, 'plot_players': True, 'plot_treasure': True, 'plot_shelter': True})
         self._map = kwargs.get('map', None)
         self._hunters = kwargs.get('hunters')
         self._protectors = kwargs.get('protectors')
         self._treasure = kwargs.get('treasure')
+        self._shelter = kwargs.get('shelter')
+
+        # Initialize new drawing assisstant with default values (The screen is supposed to be 2K)
+        self._figure = plt.figure(figsize=(25.6, 14.4))
+        self._static_axes = plt.gca()
+        self._dynamic_axes = plt.gca()
         self._to_be_removes_elements = []
         self._are_statics_drawn = False
         
@@ -45,8 +49,11 @@ class DrawingAssisstant:
                 s=0.5
             )
             
-            if vertex._shortest_distance_vector is not None:  
-                self._static_axes.arrow(vertex_center[0], vertex_center[1], vertex._shortest_distance_vector[0]/2, vertex._shortest_distance_vector[1]/2, linewidth=0.5)
+            if vertex._shortest_distance_to_treasure_vector is not None:  
+                self._static_axes.arrow(vertex_center[0], vertex_center[1], vertex._shortest_distance_to_treasure_vector[0]/3, vertex._shortest_distance_to_treasure_vector[1]/3, linewidth=0.5)
+            
+            if vertex._shortest_distance_to_shelter_vector is not None:  
+                self._static_axes.arrow(vertex_center[0], vertex_center[1], vertex._shortest_distance_to_shelter_vector[0]/3, vertex._shortest_distance_to_shelter_vector[1]/3, linewidth=0.5, color='red')
             
             self._static_axes.plot(
                 [
@@ -131,6 +138,17 @@ class DrawingAssisstant:
             s=400
         )
     
+    def plot_shelter(self):
+        position = self._shelter.get_position()
+        self._static_axes.scatter(
+            position[0,0], 
+            position[0,1],
+            color='blue',
+            marker='2',
+            alpha=0.8,
+            s=400
+        )
+    
     def remove_dynamic_elements(self):
         for element in self._to_be_removes_elements:
             element.remove()
@@ -151,6 +169,9 @@ class DrawingAssisstant:
             if self._instructions['plot_treasure']: 
                 self.plot_treasure()
             
+            if self._instructions['plot_shelter']:
+                self.plot_shelter()
+                
             self._are_statics_drawn = True
         
         # Dynamic elements
