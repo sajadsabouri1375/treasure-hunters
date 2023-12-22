@@ -11,7 +11,7 @@ class ProtectorState(Enum):
     CAPTURED_HUNTER = 3
     DEAD = 4
     LOST_TREASURE = 5
-
+    
 class Protector(IntelligentPlayer):
 
     def __init__(self, **kwargs):
@@ -47,13 +47,13 @@ class Protector(IntelligentPlayer):
             for move_vector in self._feasible_move_vectors
         ]
         
-    def find_treasure_move_vectors(self, weight_treasure):
+    def find_treasure_move_vectors(self, treasure_weight):
         
         treasure_unit_vector = VectorUtils.find_unit_vector(self._treasure_move_vector)
         
         self._feasible_move_vectors_treasure_deviations = self.find_vector_deviations(treasure_unit_vector)
         weights = [
-            self._theta_effect(deviation) * weight_treasure
+            self._theta_effect(deviation) * treasure_weight
             for deviation in self._feasible_move_vectors_treasure_deviations
         ]
         return weights
@@ -86,7 +86,7 @@ class Protector(IntelligentPlayer):
         
         # Update treasure status (distance and move vector)
         if self._treasure_distance is None:
-            self.update_treasure_status(treasure)   
+            self.update_treasure_status(treasure.get_current_position())   
             
         # Update hunter status
         hunter_distance, hunter_treasure_distance, hunter_move_vector = self.find_distance_and_move_vector_to(hunter, treasure)
@@ -95,36 +95,57 @@ class Protector(IntelligentPlayer):
         if self._number_of_not_in_sight_chasing >= self._number_of_maximum_not_sight_chasing:
             self._hunter_last_position_in_sight = None
             self._number_of_not_in_sight_chasing = 0
-            
-        if hunter_distance == np.inf and self._hunter_last_position_in_sight is None:
-            treasure_weight, hunter_weight = self.calculate_treasure_based_weights(False, hunter_treasure_distance)
-            
-        elif hunter_distance == np.inf and self._hunter_last_position_in_sight is not None and self._number_of_not_in_sight_chasing < self._number_of_maximum_not_sight_chasing:
-            hunter.set_current_position(self._hunter_last_position_in_sight)
-            hunter_distance, hunter_treasure_distance, hunter_move_vector = self.find_distance_and_move_vector_to(
-                hunter,
-                treasure,
-                check_in_sight_status=False
-            )
-            treasure_weight, hunter_weight = self.calculate_treasure_based_weights(True, hunter_treasure_distance)
-            self._number_of_not_in_sight_chasing += 1
-               
-        else:
-            treasure_weight, hunter_weight = self.calculate_treasure_based_weights(True, hunter_treasure_distance)
-            self._hunter_last_position_in_sight = copy(hunter.get_current_position())
-            self._number_of_not_in_sight_chasing = 0
-            
-        # Apply treasure weight to guide vectors
-        treasure_weights = self.find_treasure_move_vectors(treasure_weight)
         
-        # Treasure protector guide vector
-        if hunter_weight > 0:
-            hunter_weights = self.find_other_player_move_vectors(hunter_move_vector, hunter_weight)
-        else:
-            hunter_weights = np.zeros(self._number_of_feasible_moving_vectors)
+        if self._state == ProtectorState.CAPTURING_HUNTER:
             
-        next_move_vector = self.find_max_score_move_vector(treasure_weights, hunter_weights)
-        
+            # Roaming state
+            if hunter_distance == np.inf and self._hunter_last_position_in_sight is None:
+                treasure_weight = 1
+                hunter_weight = 0
+                    
+                if self._is_treasure_in_sight:
+                    self.update_treasure_status(treasure.get_closest_wing_position(self.get_current_position()))
+                           
+            # Capturing hunter state     
+            elif hunter_distance == np.inf and self._hunter_last_position_in_sight is not None and self._number_of_not_in_sight_chasing < self._number_of_maximum_not_sight_chasing:
+                hunter.set_current_position(self._hunter_last_position_in_sight)
+                hunter_distance, hunter_treasure_distance, hunter_move_vector = self.find_distance_and_move_vector_to(
+                    hunter,
+                    treasure,
+                    check_in_sight_status=False
+                )
+                treasure_weight, hunter_weight = self.calculate_treasure_based_weights(hunter_treasure_distance)
+                self._number_of_not_in_sight_chasing += 1
+                
+            # Capturing hunter state     
+            else:
+                treasure_weight, hunter_weight = self.calculate_treasure_based_weights(hunter_treasure_distance)
+                self._hunter_last_position_in_sight = copy(hunter.get_current_position())
+                self._number_of_not_in_sight_chasing = 0
+                
+            # Apply treasure weight to guide vectors
+            treasure_weights = self.find_treasure_move_vectors(treasure_weight)
+            
+            # Treasure protector guide vector
+            if hunter_weight > 0:
+                hunter_weights = self.find_other_player_move_vectors(hunter_move_vector, hunter_weight)
+            else:
+                hunter_weights = np.zeros(self._number_of_feasible_moving_vectors)
+                
+            next_move_vector = self.find_max_score_move_vector(treasure_weights, hunter_weights)
+
+        if self._state == ProtectorState.RESCUING_TREASURE:
+            
+            if hunter_distance == np.inf and self._hunter_last_position_in_sight is not None and self._number_of_not_in_sight_chasing < self._number_of_maximum_not_sight_chasing:
+                self._number_of_not_in_sight_chasing += 1
+                
+            else:
+                self._number_of_not_in_sight_chasing = 0
+                
+            treasure_weights = self.find_treasure_move_vectors(treasure_weight=0)
+            hunter_weights = self.find_other_player_move_vectors(hunter_move_vector, other_player_weight=1)
+            next_move_vector = self.find_max_score_move_vector(treasure_weights, hunter_weights)
+            
         # Deduct next move vector according to all vectors
         self.set_next_move_vector(next_move_vector)
         self.move()

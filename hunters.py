@@ -63,7 +63,7 @@ class Hunter(IntelligentPlayer):
         
         # Update treasure status (distance and move vector)
         if self._treasure_distance is None:
-            self.update_treasure_status(treasure)   
+            self.update_treasure_status(treasure.get_current_position())   
         
         # Update treasure status (distance and move vector)
         if self._shelter_distance is None:
@@ -83,7 +83,8 @@ class Hunter(IntelligentPlayer):
                 protector_move_vector = -1 * protector_move_vector
             
             if protector_distance == np.inf and self._protector_last_position_in_sight is None:
-                treasure_weight, protector_weight = self.calculate_treasure_based_weights(False, protector_treasure_distance)
+                treasure_weight = 1
+                protector_weight = 0
                 
             elif protector_distance == np.inf and self._protector_last_position_in_sight is not None and self._number_of_not_in_sight_escaping < self._number_of_maximum_not_sight_escaping:
                 protector.set_current_position(self._protector_last_position_in_sight)
@@ -93,11 +94,11 @@ class Hunter(IntelligentPlayer):
                     check_in_sight_status=False
                 )
                 protector_move_vector = -1 * protector_move_vector
-                treasure_weight, protector_weight = self.calculate_treasure_based_weights(True, protector_treasure_distance)
+                treasure_weight, protector_weight = self.calculate_treasure_based_weights(protector_treasure_distance)
                 self._number_of_not_in_sight_escaping += 1
                 
             elif protector_distance != np.inf:
-                treasure_weight, protector_weight = self.calculate_treasure_based_weights(True, protector_treasure_distance)
+                treasure_weight, protector_weight = self.calculate_treasure_based_weights(protector_treasure_distance)
                 self._protector_last_position_in_sight = copy(self.get_current_position())
                 self._number_of_not_in_sight_escaping = 0
             
@@ -121,7 +122,8 @@ class Hunter(IntelligentPlayer):
                 protector_move_vector = -1 * protector_move_vector
                 
             if protector_distance == np.inf and self._protector_last_position_in_sight is None:
-                shelter_weight, protector_weight = self.calculate_shelter_based_weights(False, protector_shelter_distance)
+                shelter_weight = 1
+                protector_weight = 0
                 
             elif protector_distance == np.inf and self._protector_last_position_in_sight is not None and self._number_of_not_in_sight_escaping < self._number_of_maximum_not_sight_escaping:
                 protector.set_current_position(self._protector_last_position_in_sight)
@@ -131,11 +133,11 @@ class Hunter(IntelligentPlayer):
                     check_in_sight_status=False
                 )
                 protector_move_vector = -1 * protector_move_vector
-                shelter_weight, protector_weight = self.calculate_shelter_based_weights(True, protector_shelter_distance)
+                shelter_weight, protector_weight = self.calculate_shelter_based_weights(protector_shelter_distance)
                 self._number_of_not_in_sight_escaping += 1
                 
             elif protector_distance != np.inf:
-                shelter_weight, protector_weight = self.calculate_shelter_based_weights(True, protector_shelter_distance)
+                shelter_weight, protector_weight = self.calculate_shelter_based_weights(protector_shelter_distance)
                 self._protector_last_position_in_sight = copy(self.get_current_position())
                 self._number_of_not_in_sight_escaping = 0
             
