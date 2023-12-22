@@ -14,6 +14,9 @@ class Vertex:
         self._shortest_distance_to_shelter = np.inf
         self._shortest_distance_to_shelter_vector = None
         
+        self._direct_distance_to_treasure = np.inf
+        self._direct_distance_to_shelter = np.inf
+        
     def get_center(self):
         return self._center
     

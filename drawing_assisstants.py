@@ -7,7 +7,7 @@ class DrawingAssisstant:
         
         plt.ion()
 
-        self._instructions = kwargs.get('instructions', {'plot_mesh': True, 'plot_boundaries': True, 'plot_players': True, 'plot_treasure': True, 'plot_shelter': True})
+        self._instructions = kwargs.get('instructions', {'plot_mesh': False, 'plot_boundaries': True, 'plot_players': True, 'plot_treasure': True, 'plot_shelter': True})
         self._map = kwargs.get('map', None)
         self._hunters = kwargs.get('hunters')
         self._protectors = kwargs.get('protectors')

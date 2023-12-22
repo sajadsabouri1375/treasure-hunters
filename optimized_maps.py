@@ -8,7 +8,7 @@ from vector_utils import VectorUtils
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 import sys
-sys.setrecursionlimit(10000)
+sys.setrecursionlimit(20000)
 
 
 class OptimizedMap(Map):
@@ -24,21 +24,15 @@ class OptimizedMap(Map):
         self.create_mesh()
         
         # Deduct treasure and shelter vertices according to mesh
-        self._shelter_vertex_of_interest = self.find_vertex_of_interest(self._shelter)
-        self._treasure_vertex_of_interest = self.find_vertex_of_interest(self._treasure)
-
-    def find_vertex_of_interest(self, point_of_interest):
+        self._shelter_vertex_of_interest, distances = self.return_vertex_including_position(self._shelter)
         
-        min_distance_to_point_of_interest = np.inf
-        
-        for vertex in self._mesh:
-            new_distance = np.linalg.norm(vertex.get_center() - point_of_interest)
+        for i, vertex in enumerate(self._mesh):
+            vertex._direct_distance_to_shelter = distances[i]
             
-            if new_distance < min_distance_to_point_of_interest:
-                min_distance_to_point_of_interest = new_distance
-                vertex_of_interest = vertex      
+        self._treasure_vertex_of_interest, distances = self.return_vertex_including_position(self._treasure)
         
-        return vertex_of_interest
+        for i, vertex in enumerate(self._mesh):
+            vertex._direct_distance_to_treasure = distances[i]
     
     def create_mesh(self):
         
@@ -129,25 +123,30 @@ class OptimizedMap(Map):
         if vertex_i == vertex_j:
             return 0, None
         
-        min_distance = np.inf
-        min_distance_vector = None
-        
-        for linked_vertex, linked_vertex_distance in zip(vertex_i.get_links(), vertex_i.get_distances()):
+        if VectorUtils.are_points_in_sight(vertex_i.get_center(), vertex_j.get_center(), self._map_boundaries):
+            min_distance = VectorUtils.find_distance_between_two_points(vertex_i.get_center(), vertex_j.get_center())
+            min_distance_vector = copy(vertex_j)
+
+        else:            
+            min_distance = np.inf
+            min_distance_vector = None
             
-            if linked_vertex not in traversed_vertices:  
+            for linked_vertex, linked_vertex_distance in zip(vertex_i.get_links(), vertex_i.get_distances()):
                 
-                distance, _ = self.find_min_route_between_vertices(
-                    linked_vertex, 
-                    vertex_j,
-                    copy(traversed_vertices),
-                    mode
-                )
-                distance = linked_vertex_distance + distance
-                
-                if distance < min_distance:
-                    min_distance = distance
-                    min_distance_vector = copy(linked_vertex)
-        
+                if linked_vertex not in traversed_vertices:  
+                    
+                    distance, _ = self.find_min_route_between_vertices(
+                        linked_vertex, 
+                        vertex_j,
+                        copy(traversed_vertices),
+                        mode
+                    )
+                    distance = linked_vertex_distance + distance
+                    
+                    if distance < min_distance:
+                        min_distance = distance
+                        min_distance_vector = copy(linked_vertex)
+            
         if mode == 'treasure':
             if min_distance < vertex_i._shortest_distance_to_treasure:
                 vertex_i._shortest_distance_to_treasure = min_distance
@@ -165,26 +164,29 @@ class OptimizedMap(Map):
 
     def optimize_routes(self):
         
-        # Optimize routes for treasure
-        for vertex in self._mesh:
-            vertex._shortest_distance_to_treasure, vertex._shortest_distance_to_treasure_vector = self.find_min_route_between_vertices(
-                vertex, self._treasure_vertex_of_interest, [], 'treasure'
-            )
-            
         # Optimize routes for shelter
+        # for vertex in sorted(self._mesh, key = lambda vertex: vertex._direct_distance_to_shelter):
         for vertex in self._mesh:
             vertex._shortest_distance_to_shelter, vertex._shortest_distance_to_shelter_vector = self.find_min_route_between_vertices(
                 vertex, self._shelter_vertex_of_interest, [], 'shelter'
             )
             
+        # Optimize routes for treasure
+        # for vertex in sorted(self._mesh, key = lambda vertex: 1/vertex._direct_distance_to_treasure):
+        for vertex in self._mesh:
+            vertex._shortest_distance_to_treasure, vertex._shortest_distance_to_treasure_vector = self.find_min_route_between_vertices(
+                vertex, self._treasure_vertex_of_interest, [], 'treasure'
+            )
+            
     def return_vertex_including_position(self, position):
     
         distances = np.sum(np.square(self._vertices_centers - position), axis=1)
-        return self._mesh[distances.argmin()]
+
+        return self._mesh[distances.argmin()], distances
     
     def get_distance_and_move_vector(self, position, mode='treasure'):
         
-        inclusive_vertex = self.return_vertex_including_position(position)
+        inclusive_vertex, _ = self.return_vertex_including_position(position)
         
         if mode == 'treasure':
             return inclusive_vertex._shortest_distance_to_treasure, inclusive_vertex._shortest_distance_to_treasure_vector

@@ -17,7 +17,7 @@ class Protector(IntelligentPlayer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self._theta_effect = kwargs.get('deviation_effect', lambda theta: (np.pi-theta)/np.pi)
+        self._theta_effect = kwargs.get('deviation_effect', lambda theta: (3.14-theta)/3.14)
 
         # Default values for a new protector
         self._is_alive = True
