@@ -14,33 +14,33 @@ class TestHunters(unittest.TestCase):
     def setUp(cls):
         
         cls._treasure = Treasure(
-            current_position=np.array([1.3, 0.85]).reshape(1, -1),
+            current_position=np.array([1.3, 0.45]).reshape(1, -1),
             is_hunted=False,
             cycling_radius=0.03
         )
         
         cls._shelter = Shelter(
-            position=np.array([1.3, 0.05]).reshape(1, -1)
+            position=np.array([0.3, 0.45]).reshape(1, -1)
         )
                 
         cls._map = OptimizedMap(
             map_name='map_01',
             treasure=cls._treasure.get_current_position(),
             shelter=cls._shelter.get_position(),
-            vertex_size = 0.05
+            vertex_size = 0.07
         )
         cls._map.optimize_routes()
         
         cls._hunter = Hunter(
-            step_size=0.005,
+            step_size=0.01,
             current_position=np.array([0.1, 0.45]).reshape(1, -1),
             next_move_vector=np.array([-1, 0]).reshape(1, -1),
             velocity_reduction_inertia_formula=lambda theta: 1/(1+theta),
             number_of_vectors=16,
             map=cls._map,
             boundaries_instruction=lambda distance: 1 / (1 + np.exp(max(-100 * (distance - 0.03), -700))),
-            treasure_instruction=lambda relative_distance: np.exp(max(-0.001 * relative_distance, -700)),
-            inertia_instruction = lambda deviation: np.exp(-0.1 * deviation),
+            treasure_instruction=lambda relative_distance: np.exp(max(-0.3 * relative_distance, -700)),
+            inertia_instruction = lambda deviation: np.exp(-0.05 * deviation),
             maximum_escape_time=20
         )
         
@@ -52,8 +52,8 @@ class TestHunters(unittest.TestCase):
             number_of_vectors=16,
             map=cls._map,
             boundaries_instruction=lambda distance: 1 / (1 + np.exp(max(-100 * (distance - 0.03), -700))),
-            treasure_instruction=lambda relative_distance: np.exp(max(-50 * relative_distance, -700)),
-            inertia_instruction = lambda deviation: np.exp(-0.1 * deviation),
+            treasure_instruction=lambda relative_distance: np.exp(max(-100 * relative_distance, -700)),
+            inertia_instruction = lambda deviation: np.exp(-0.05 * deviation),
             maximum_chase_time=20
         )
         
