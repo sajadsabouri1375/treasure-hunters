@@ -1,11 +1,23 @@
 {
+    "map_test":{
+        "aspect_ratio": {
+            "dx": 1,
+            "dy": 1
+        },
+        "items":{
+            "blocks":{
+            },
+            "containers": {
+                "container": "container_test"
+            }
+        }
+    },
     "map_01": {
         "aspect_ratio": {
             "dx": 16,
             "dy": 9
         },
         "items":{
-            "hunter_shelter": {},
             "blocks":{
                 "block_01": "hexagonal_square_center_block",
                 "block_02": "curved_ball_left_top_01",

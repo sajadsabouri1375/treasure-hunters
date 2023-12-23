@@ -27,7 +27,7 @@ class TestHunters(unittest.TestCase):
             map_name='map_01',
             treasure=cls._treasure.get_current_position(),
             shelter=cls._shelter.get_position(),
-            vertex_size = 0.07
+            vertex_size = 0.05
         )
         cls._map.optimize_routes()
         

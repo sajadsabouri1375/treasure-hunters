@@ -1,3 +1,9 @@
+'''
+    IntelligentPlayer class extends ConstrainedPlayer class and implements the shared intelligence 
+    amongst all types of players. For instance, updating treasure status for all players has the 
+    same logic, so it would be implemented in this class.
+'''
+
 from constrained_players import ConstrainedPlayer
 from vector_utils import VectorUtils
 import numpy as np
@@ -11,6 +17,8 @@ class IntelligentPlayer(ConstrainedPlayer):
         self._theta_effect = kwargs.get('deviation_effect', lambda theta: (np.pi-theta)/np.pi)
         self._treasure_instruction = kwargs.get('treasure_instruction')
         self._inertia_instruction = kwargs.get('inertia_instruction', lambda deviation: 1)
+        
+        # Initialize state variables for intelligent player class
         self._treasure_distance = None
         self._treasure_move_vector = None
         self._shelter_distance = None

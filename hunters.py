@@ -43,10 +43,21 @@ class Hunter(IntelligentPlayer):
         
     def update_protector_status(self, protector):
         self._protector_distance, self._protector_move_vector = protector.get_distance_and_move_vector(self.get_current_position)
-                  
+
+    def update_shelter_status(self, shelter):
+        
+        is_shelter_in_sight = VectorUtils.are_points_in_sight(self.get_current_position(), shelter.get_position(), self._map.get_boundaries())
+        
+        if not is_shelter_in_sight:
+            self._shelter_distance, self._shelter_move_vector = self._map.get_distance_and_move_vector(self.get_current_position(), 'shelter')
+            
+        else:
+            self._shelter_distance = VectorUtils.find_distance_between_two_points(self.get_current_position(), shelter.get_position())
+            self._shelter_move_vector = shelter.get_position() - self.get_current_position()  
+             
     def deduct_next_move(self, protector, treasure, shelter, effective_distance):
         
-        # Update state after the previous move
+        # Update state according to the last state of the game
         self.update_state(protector, treasure, shelter, effective_distance)
         
         if not self.shall_we_go_on():
@@ -160,6 +171,7 @@ class Hunter(IntelligentPlayer):
 
         if self._state in [HunterState.HUNTING_TREASURE, HunterState.RETURNING_TO_SHELTER]:
             return True
+        
         return False
     
     def update_state(self, protector, treasure, shelter, effective_distance):
@@ -200,14 +212,4 @@ class Hunter(IntelligentPlayer):
             return True
         return False
     
-    def update_shelter_status(self, shelter):
-        
-        is_shelter_in_sight = VectorUtils.are_points_in_sight(self.get_current_position(), shelter.get_position(), self._map.get_boundaries())
-        
-        if not is_shelter_in_sight:
-            self._shelter_distance, self._shelter_move_vector = self._map.get_distance_and_move_vector(self.get_current_position(), 'shelter')
-            
-        else:
-            self._shelter_distance = VectorUtils.find_distance_between_two_points(self.get_current_position(), shelter.get_position())
-            self._shelter_move_vector = shelter.get_position() - self.get_current_position()  
             
