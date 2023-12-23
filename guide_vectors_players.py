@@ -39,3 +39,9 @@ class GuideVectorsPlayer(BasicPlayer):
             VectorUtils.find_angle_vector(base_vector_angle + i * self._angle_spacing)
             for i in range(self._number_of_feasible_moving_vectors)
         ]
+        
+    def find_vector_deviations(self, unit_vector):
+        return [
+            VectorUtils.find_angle_between_two_vectors(unit_vector, move_vector)
+            for move_vector in self._feasible_move_vectors
+        ]

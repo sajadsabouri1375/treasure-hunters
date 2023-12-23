@@ -13,7 +13,7 @@
 
 from guide_vectors_players import GuideVectorsPlayer
 from vector_utils import VectorUtils
-from maps import Map
+from optimized_maps import OptimizedMap
 import numpy as np
 
 class ConstrainedPlayer(GuideVectorsPlayer):
@@ -21,7 +21,7 @@ class ConstrainedPlayer(GuideVectorsPlayer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
-        self._map:Map = kwargs.get('map')
+        self._map:OptimizedMap = kwargs.get('map')
         self._boundaries_instruction = kwargs.get('boundaries_instruction')
         
         # Initialize class variables
@@ -31,7 +31,7 @@ class ConstrainedPlayer(GuideVectorsPlayer):
     def get_feasible_move_vectors_distances(self) -> list:
         return self._feasible_move_vectors_distances
     
-    def get_map(self) -> Map:
+    def get_map(self) -> OptimizedMap:
         return self._map
     
     def set_boundaries_instruction(self, new_instruction) -> None:

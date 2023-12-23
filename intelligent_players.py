@@ -1,42 +1,45 @@
 '''
-    IntelligentPlayer class extends ConstrainedPlayer class and implements the shared intelligence 
+    IntelligentPlayer class extends InertiaPlayer class and implements the shared intelligence 
     amongst all types of players. For instance, updating treasure status for all players has the 
     same logic, so it would be implemented in this class.
 '''
 
-from constrained_players import ConstrainedPlayer
+from inertia_players import InertiaPlayer
 from vector_utils import VectorUtils
 import numpy as np
 
 
-class IntelligentPlayer(ConstrainedPlayer):
+class IntelligentPlayer(InertiaPlayer):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
+        # Theta effect formula distributes a given weight among all feasible move vectors. 
+        # In case the deviation equals Pi, the ammortized weight must be zero.
         self._theta_effect = kwargs.get('deviation_effect', lambda theta: (np.pi-theta)/np.pi)
+        
+        # Treasure instruction formula controls the weight of moving towards treasure according
+        # to the ratio of distance to treasure to distance to protector
         self._treasure_instruction = kwargs.get('treasure_instruction')
-        self._inertia_instruction = kwargs.get('inertia_instruction', lambda deviation: 1)
         
         # Initialize state variables for intelligent player class
         self._treasure_distance = None
         self._treasure_move_vector = None
+        self._is_treasure_in_sight = None
         self._shelter_distance = None
         self._shelter_move_vector = None
-        self._inertia_deviation_weights = []
-        
-    def reset_player(self):
-        self._treasure_distance = None
-        self._treasure_move_vector = None
-        self._shelter_distance = None
-        self._shelter_move_vector = None
-        
-    def find_vector_deviations(self, unit_vector):
-        return [
-            VectorUtils.find_angle_between_two_vectors(unit_vector, move_vector)
-            for move_vector in self._feasible_move_vectors
-        ]
-        
+        self._is_shelter_in_sight = None
+    
+    def initialize_player(self, treasure, shelter):
+        self.update_state_relative_to_treasure(treasure.get_current_position())   
+        self.update_state_relative_to_shelter(shelter.get_position()) 
+    
+    def get_treasure_distance(self):
+        return self._treasure_distance
+    
+    def get_shelter_distance(self):
+        return self._shelter_distance
+    
     def find_treasure_move_vectors(self, weight_treasure):
         
         try:
@@ -94,7 +97,7 @@ class IntelligentPlayer(ConstrainedPlayer):
         if is_player_in_sight:
             
             player_distance = VectorUtils.find_distance_between_two_points(self.get_current_position(), player.get_current_position())
-            player_treasure_distance = player.get_treasure_distance(treasure.get_current_position())
+            player_treasure_distance = player.get_treasure_distance()
             move_vector = player.get_current_position() - self.get_current_position()
             
         else:
@@ -114,7 +117,7 @@ class IntelligentPlayer(ConstrainedPlayer):
         if is_player_in_sight:
             
             player_distance = VectorUtils.find_distance_between_two_points(self.get_current_position(), player.get_current_position())
-            player_shelter_distance = player.get_shelter_distance(shelter)
+            player_shelter_distance = player.get_shelter_distance()
             move_vector = player.get_current_position() - self.get_current_position()
             
         else:
@@ -124,41 +127,26 @@ class IntelligentPlayer(ConstrainedPlayer):
         
         return player_distance, player_shelter_distance, move_vector
     
-    def update_treasure_status(self, treasure_position):
+    def find_distance_and_move_vector_towards_landmark(self, landmark_position, landmark_type):
         
-        self._is_treasure_in_sight = VectorUtils.are_points_in_sight(self.get_current_position(), treasure_position, self._map.get_boundaries())
+        is_landmark_in_sight = VectorUtils.are_points_in_sight(self.get_current_position(), landmark_position, self._map.get_boundaries())
         
-        if not self._is_treasure_in_sight:
-            self._treasure_distance, self._treasure_move_vector = self._map.get_distance_and_move_vector(self.get_current_position(), 'treasure')
+        if not is_landmark_in_sight:
+            distance_to_landmark, move_vector_to_landmark = self._map.get_distance_and_move_vector(self.get_current_position(), landmark_type)
             
         else:
-            self._treasure_distance = VectorUtils.find_distance_between_two_points(self.get_current_position(), treasure_position)
-            self._treasure_move_vector = treasure_position - self.get_current_position()  
+            distance_to_landmark = VectorUtils.find_distance_between_two_points(self.get_current_position(), landmark_position)
+            move_vector_to_landmark = landmark_position - self.get_current_position() 
+        
+        return distance_to_landmark, move_vector_to_landmark, is_landmark_in_sight
     
-    def update_shelter_status(self, shelter):
+    def update_state_relative_to_treasure(self, treasure_position):
         
-        is_shelter_in_sight = VectorUtils.are_points_in_sight(self.get_current_position(), shelter.get_position(), self._map.get_boundaries())
+        self._treasure_distance, self._treasure_move_vector, self._is_treasure_in_sight = self.find_distance_and_move_vector_towards_landmark(treasure_position, 'treasure')
         
-        if not is_shelter_in_sight:
-            self._shelter_distance, self._shelter_move_vector = self._map.get_distance_and_move_vector(self.get_current_position(), 'shelter')
-            
-        else:
-            self._shelter_distance = VectorUtils.find_distance_between_two_points(self.get_current_position(), shelter.get_position())
-            self._shelter_move_vector = shelter.get_position() - self.get_current_position()  
-            
-    def get_treasure_distance(self, treasure):
-        if self._treasure_distance is not None:
-            return self._treasure_distance
-        else:
-            self.update_treasure_status(treasure)
-            return self._treasure_distance
-    
-    def get_shelter_distance(self, shelter):
-        if self._shelter_distance is not None:
-            return self._shelter_distance
-        else:
-            self.update_shelter_status(shelter)
-            return self._shelter_distance
+    def update_state_relative_to_shelter(self, shelter_position):
+        
+        self._shelter_distance, self._shelter_move_vector, self._is_shelter_in_sight = self.find_distance_and_move_vector_towards_landmark(shelter_position, 'shelter')
         
     def calculate_treasure_based_weights(self, player_distance):
         
@@ -190,13 +178,5 @@ class IntelligentPlayer(ConstrainedPlayer):
         
         return next_move_vector
     
-    def calculate_inertia_based_weights(self):
-        
-        deviations = self.find_vector_deviations(self._previous_move_vector)
-        
-        self._inertia_deviation_weights = [
-            self._inertia_instruction(deviation)
-            for deviation in deviations
-        ]
         
         

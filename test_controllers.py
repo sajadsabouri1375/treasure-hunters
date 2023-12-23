@@ -45,7 +45,7 @@ class TestHunters(unittest.TestCase):
         )
         
         cls._protector = Protector(
-            step_size=0.01,
+            step_size=0.011,
             current_position=np.array([1.3, 0.45]).reshape(1, -1),
             next_move_vector=np.array([-1, 0]).reshape(1, -1),
             velocity_reduction_inertia_formula=lambda theta: 1/(1+theta),

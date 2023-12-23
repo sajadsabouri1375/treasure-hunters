@@ -34,7 +34,9 @@ class Controller:
         self._current_simulation_step = 0
         self._game_general_state = GameGeneralState.IN_PROGRESS
         self._game_detailed_state = GameDetailedState.TREASURE_HUNT
-    
+        self._hunter.initialize_player(self._treasure, self._shelter)
+        self._protector.initialize_player(self._treasure, self._shelter)
+        
     def get_state(self):
         return self._game_general_state
     
@@ -52,9 +54,6 @@ class Controller:
 
         if not self.shall_we_go_on():
             return
-        
-        self._hunter.reset_player()
-        self._protector.reset_player()
         
         hunter_copy = deepcopy(self._hunter)
         protector_copy = deepcopy(self._protector)

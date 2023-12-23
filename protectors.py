@@ -82,11 +82,10 @@ class Protector(IntelligentPlayer):
         self.filter_boundaries_move_vectors()
         
         # Calculate inertia effect weights
-        self.calculate_inertia_based_weights()
+        self.calculate_inertia_weights()
         
         # Update treasure status (distance and move vector)
-        if self._treasure_distance is None:
-            self.update_treasure_status(treasure.get_current_position())   
+        self.update_state_relative_to_treasure(treasure.get_current_position())   
             
         # Update hunter status
         hunter_distance, hunter_treasure_distance, hunter_move_vector = self.find_distance_and_move_vector_to(hunter, treasure)
@@ -104,7 +103,7 @@ class Protector(IntelligentPlayer):
                 hunter_weight = 0
                     
                 if self._is_treasure_in_sight:
-                    self.update_treasure_status(treasure.get_closest_wing_position(self.get_current_position()))
+                    self.update_state_relative_to_treasure(treasure.get_closest_wing_position(self.get_current_position()))
                            
             # Capturing hunter state     
             elif hunter_distance == np.inf and self._hunter_last_position_in_sight is not None and self._number_of_not_in_sight_chasing < self._number_of_maximum_not_sight_chasing:

@@ -25,7 +25,7 @@ class Hunter(IntelligentPlayer):
         self._protector_last_position_in_sight = None
         self._number_of_not_in_sight_escaping = 0
         self._state = HunterState.HUNTING_TREASURE
-    
+        
     def get_state(self):
         return self._state
     
@@ -43,23 +43,13 @@ class Hunter(IntelligentPlayer):
         
     def update_protector_status(self, protector):
         self._protector_distance, self._protector_move_vector = protector.get_distance_and_move_vector(self.get_current_position)
-
-    def update_shelter_status(self, shelter):
-        
-        is_shelter_in_sight = VectorUtils.are_points_in_sight(self.get_current_position(), shelter.get_position(), self._map.get_boundaries())
-        
-        if not is_shelter_in_sight:
-            self._shelter_distance, self._shelter_move_vector = self._map.get_distance_and_move_vector(self.get_current_position(), 'shelter')
-            
-        else:
-            self._shelter_distance = VectorUtils.find_distance_between_two_points(self.get_current_position(), shelter.get_position())
-            self._shelter_move_vector = shelter.get_position() - self.get_current_position()  
              
     def deduct_next_move(self, protector, treasure, shelter, effective_distance):
         
         # Update state according to the last state of the game
         self.update_state(protector, treasure, shelter, effective_distance)
         
+        # If hunter is dead, captured, or safe, new moves are redundant.
         if not self.shall_we_go_on():
             return
         
@@ -70,17 +60,9 @@ class Hunter(IntelligentPlayer):
         self.filter_boundaries_move_vectors()
         
         # Calculate inertia effect weights
-        self.calculate_inertia_based_weights()
-        
-        # Update treasure status (distance and move vector)
-        if self._treasure_distance is None:
-            self.update_treasure_status(treasure.get_current_position())   
-        
-        # Update treasure status (distance and move vector)
-        if self._shelter_distance is None:
-            self.update_shelter_status(shelter)  
+        self.calculate_inertia_weights()
                       
-        # Deduct weights
+        # Update number of not in sight escaping
         if self._number_of_not_in_sight_escaping >= self._number_of_maximum_not_sight_escaping:
             self._protector_last_position_in_sight = None
             self._number_of_not_in_sight_escaping = 0
@@ -166,6 +148,12 @@ class Hunter(IntelligentPlayer):
         # Deduct next move vector according to all vectors
         self.set_next_move_vector(next_move_vector)
         self.move()
+        
+        # Update distance to treasure and move vector towards treasure
+        self.update_state_relative_to_treasure(treasure.get_current_position())   
+        
+        # Update distance to shelter and move vector towards shelter
+        self.update_state_relative_to_shelter(shelter.get_position())  
 
     def shall_we_go_on(self):
 
