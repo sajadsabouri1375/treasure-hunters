@@ -1,6 +1,6 @@
 from copy import deepcopy
 from vector_utils import VectorUtils
-from hunters import Hunter, HunterState
+from hunters import Hunter, HunterState, GeneralHuntingState
 from protectors import Protector, ProtectorState
 from drawing_assisstants import DrawingAssisstant
 from enum import Enum
@@ -68,7 +68,7 @@ class Controller:
         print(
             f'''
             {Fore.BLUE}Players{Fore.RESET}:
-                Hunter State: {self._hunter.get_state_string()}
+                Hunter State: {self._hunter.get_hunter_state_string()}
                 Protector State: {self._protector.get_state_string()}
                 
             {Fore.BLUE}Simulation finished with{Fore.RESET}:
@@ -83,8 +83,8 @@ class Controller:
         return True
     
     def update_game_state(self):
-        hunter_state = self._hunter.get_state()
-        protector_state = self._protector.get_state()
+        hunter_state = self._hunter.get_hunter_state()
+        protector_state = self._protector.get_protector_state()
         
         if hunter_state == HunterState.DEAD and not protector_state == ProtectorState.DEAD:
             self._game_general_state = GameGeneralState.PROTECTOR_WON
@@ -98,14 +98,11 @@ class Controller:
             self._game_general_state = GameGeneralState.DRAW
             self._game_detailed_state = GameDetailedState.EITHER_DEAD
         
-        elif hunter_state == HunterState.CAPTURED and protector_state == ProtectorState.CAPTURED_HUNTER:
+        elif hunter_state == HunterState.CAPTURED and protector_state == ProtectorState.CAPTURED:
             self._game_general_state = GameGeneralState.PROTECTOR_WON
             self._game_detailed_state = GameDetailedState.HUNTER_IS_CAPTURED
-        
-        elif hunter_state == HunterState.RETURNING_TO_SHELTER and protector_state == ProtectorState.RESCUING_TREASURE:
-            self._game_detailed_state = GameDetailedState.RETURNING_TO_SHELTER
             
-        elif hunter_state == HunterState.SAFE and protector_state == ProtectorState.LOST_TREASURE:
+        elif hunter_state == HunterState.SAFE and protector_state == ProtectorState.LOST:
             self._game_general_state = GameGeneralState.HUNTER_WON
             self._game_detailed_state = GameDetailedState.HUNTER_IS_SAFE
                      

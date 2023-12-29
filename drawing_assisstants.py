@@ -96,7 +96,7 @@ class DrawingAssisstant:
             )
             self._to_be_removes_elements.append(new_element)
 
-            if player._protector_last_position_in_sight is not None and player._number_of_not_in_sight_escaping < player._number_of_maximum_not_sight_escaping and player._number_of_not_in_sight_escaping > 0:
+            if player._protector_last_position_in_sight is not None and player._number_of_not_in_sight_escaping < player._number_of_maximum_not_in_sight_escaping and player._number_of_not_in_sight_escaping > 0:
                 new_element = self._dynamic_axes.scatter(
                     player._protector_last_position_in_sight[0,0],
                     player._protector_last_position_in_sight[0, 1],

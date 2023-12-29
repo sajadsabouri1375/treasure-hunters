@@ -87,45 +87,19 @@ class IntelligentPlayer(InertiaPlayer):
         
         return ammortized_weights
     
-    def find_distance_and_move_vector_to(self, player, treasure, check_in_sight_status=True):
-        
-        if check_in_sight_status:
-            is_player_in_sight = VectorUtils.are_points_in_sight(self.get_current_position(), player.get_current_position(), self._map.get_boundaries())
-        else:
-            is_player_in_sight = True
+    def find_distance_and_move_vector_to(self, player, target = 'treasure'):
             
-        if is_player_in_sight:
+        player_distance = VectorUtils.find_distance_between_two_points(self.get_current_position(), player.get_current_position())
             
-            player_distance = VectorUtils.find_distance_between_two_points(self.get_current_position(), player.get_current_position())
-            player_treasure_distance = player.get_treasure_distance()
-            move_vector = player.get_current_position() - self.get_current_position()
+        if target == 'treasure':
+            player_target_distance = player.get_treasure_distance()
+                
+        elif target == 'shelter':
+            player_target_distance = player.get_shelter_distance()
+                
+        move_vector = player.get_current_position() - self.get_current_position()
             
-        else:
-            player_distance = np.inf
-            player_treasure_distance = np.inf
-            move_vector = None
-        
-        return player_distance, player_treasure_distance, move_vector
-
-    def find_distance_and_move_vector_to_shelter(self, player, shelter, check_in_sight_status=True):
-        
-        if check_in_sight_status:
-            is_player_in_sight = VectorUtils.are_points_in_sight(self.get_current_position(), player.get_current_position(), self._map.get_boundaries())
-        else:
-            is_player_in_sight = True
-            
-        if is_player_in_sight:
-            
-            player_distance = VectorUtils.find_distance_between_two_points(self.get_current_position(), player.get_current_position())
-            player_shelter_distance = player.get_shelter_distance()
-            move_vector = player.get_current_position() - self.get_current_position()
-            
-        else:
-            player_distance = np.inf
-            player_shelter_distance = np.inf
-            move_vector = None
-        
-        return player_distance, player_shelter_distance, move_vector
+        return player_distance, player_target_distance, move_vector
     
     def find_distance_and_move_vector_towards_landmark(self, landmark_position, landmark_type):
         

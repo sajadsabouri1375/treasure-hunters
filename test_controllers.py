@@ -39,9 +39,9 @@ class TestHunters(unittest.TestCase):
             number_of_vectors=16,
             map=cls._map,
             boundaries_instruction=lambda distance: 1 / (1 + np.exp(max(-100 * (distance - 0.03), -700))),
-            treasure_instruction=lambda relative_distance: np.exp(max(-0.3 * relative_distance, -700)),
+            treasure_instruction=lambda relative_distance: np.exp(max(-30 * relative_distance, -700)),
             inertia_instruction = lambda deviation: np.exp(-0.05 * deviation),
-            maximum_escape_time=20
+            maximum_escape_time=10
         )
         
         cls._protector = Protector(
@@ -52,9 +52,9 @@ class TestHunters(unittest.TestCase):
             number_of_vectors=16,
             map=cls._map,
             boundaries_instruction=lambda distance: 1 / (1 + np.exp(max(-100 * (distance - 0.03), -700))),
-            treasure_instruction=lambda relative_distance: np.exp(max(-100 * relative_distance, -700)),
+            treasure_instruction=lambda relative_distance: np.exp(max(-8 * relative_distance, -700)),
             inertia_instruction = lambda deviation: np.exp(-0.05 * deviation),
-            maximum_chase_time=20
+            maximum_chase_time=10
         )
         
         cls._drawing_assisstant = DrawingAssisstant(
