@@ -14,13 +14,23 @@ class Treasure:
             ]
         )
         self._current_wing_of_interest = 0
+        self._is_hunted = False
         
+    def set_is_hunted(self, is_hunted):
+        self._is_hunted = is_hunted
+        
+    def get_is_hunted(self):
+        return self._is_hunted
+    
     def get_current_position(self):
         return self._current_position
     
     def get_cycling_radius(self):
         return self._cycling_radius
     
+    def update_position(self, new_position):
+        self._current_position = new_position
+        
     def next_cycling_position(self):
         
         if self._current_wing_of_interest == self._cycling_positions.shape[0]-1:

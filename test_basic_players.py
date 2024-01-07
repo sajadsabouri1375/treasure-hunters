@@ -1,13 +1,14 @@
 import unittest
-from players import Player
+from basic_players import BasicPlayer
 import numpy as np
 
 
-class TestPlayers(unittest.TestCase):
+class TestBasicPlayers(unittest.TestCase):
 
     def setUp(cls):
+        
         # First player velocity would not reduce due to inertia
-        cls._first_player = Player(
+        cls._first_player = BasicPlayer(
             step_size=1,
             next_move_vector=np.ones((1,2)),
             current_position=np.zeros((1,2)),
@@ -16,7 +17,7 @@ class TestPlayers(unittest.TestCase):
         )
         
         # Second player velocity would reduct linearly due to inertia
-        cls._second_player = Player(
+        cls._second_player = BasicPlayer(
             step_size=1,
             next_move_vector=np.ones((1,2)),
             current_position=np.zeros((1,2)),
@@ -25,6 +26,7 @@ class TestPlayers(unittest.TestCase):
         )
 
     def test_first_player_movement(self):
+        
         # First move from zero previous velocity 
         self._first_player.move()
         new_position = self._first_player.get_current_position()
@@ -39,6 +41,7 @@ class TestPlayers(unittest.TestCase):
         self.assertEqual(np.round(np.sqrt(2)/2, 5), np.round(new_position[0, 1], 5))
         
     def test_second_player_movement(self):
+        
         # First move from zero previous velocity 
         self._second_player.move()
         new_position = self._second_player.get_current_position()

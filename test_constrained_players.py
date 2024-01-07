@@ -8,7 +8,7 @@ class TestConstrainedPlayers(unittest.TestCase):
 
     def setUp(cls):
         
-        map = Map(map_name='map_box_01')
+        map = Map(map_name='map_test')
         
         cls._player = ConstrainedPlayer(
             step_size=1,

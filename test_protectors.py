@@ -1,6 +1,6 @@
 import unittest
 from protectors import Protector
-from players import Player
+from basic_players import BasicPlayer
 from treasure import Treasure
 from maps import Map
 import numpy as np
@@ -32,7 +32,7 @@ class TestProtectors(unittest.TestCase):
     def test_protector_move_logic_protection(self):
         self._protector.set_current_position(np.array([0.7, 0.5]).reshape(1, -1))
         self._protector.set_previous_move_vector(np.array([1, 0]).reshape(1, -1))
-        hunter = Player(
+        hunter = BasicPlayer(
             step_size=0.1,
             next_move_vector=np.ones((1,2)),
             current_position=np.array([0.2, 0.2]).reshape(1, -1),
@@ -51,7 +51,7 @@ class TestProtectors(unittest.TestCase):
     def test_protector_move_logic_capture(self):
         self._protector.set_current_position(np.array([0.5, 0.5]).reshape(1, -1))
         self._protector.set_previous_move_vector(np.array([1, 0]).reshape(1, -1))
-        hunter = Player(
+        hunter = BasicPlayer(
             step_size=0.1,
             next_move_vector=np.ones((1,2)),
             current_position=np.array([0.7, 0.5]).reshape(1, -1),
