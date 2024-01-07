@@ -20,13 +20,22 @@ class BasicPlayer(ABC):
     
     def __init__(self, **kwargs):
         
+        self._id = kwargs.get('id')
         self._step_size:float = kwargs.get('step_size', 0)
         self._current_position:npa = kwargs.get('current_position', np.zeros((1,2)))
         self._next_move_vector:npa = kwargs.get('next_move_vector', np.zeros((1,2)))
         self._previous_position:npa = np.copy(self._current_position)
         self._previous_move_vector:npa = np.copy(self._next_move_vector)
         self._velocity_inertia_reduction_formula = kwargs.get('velocity_reduction_inertia_formula', lambda theta: 1)
+        self._positions_history = [np.copy(self._current_position)]
+        self._max_position_storage = kwargs.get('max_position_storage', 4)
         
+    def get_id(self):
+        return self._id
+    
+    def get_positions_history(self):
+        return self._positions_history
+    
     def get_current_position(self) -> npa:
         return self._current_position
     
@@ -72,3 +81,8 @@ class BasicPlayer(ABC):
         self._current_position = self._current_position + unit_next_move_vector * reduced_step_size
 
         self._previous_move_vector = np.copy(unit_next_move_vector)
+
+        self._positions_history.append(np.copy(self._current_position))
+        
+        if len(self._positions_history) > self._max_position_storage:
+            self._positions_history.pop(0)

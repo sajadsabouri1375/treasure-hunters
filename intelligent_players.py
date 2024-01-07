@@ -16,11 +16,12 @@ class IntelligentPlayer(InertiaPlayer):
         
         # Theta effect formula distributes a given weight among all feasible move vectors. 
         # In case the deviation equals Pi, the ammortized weight must be zero.
-        self._theta_effect = kwargs.get('deviation_effect', lambda theta: (np.pi-theta)/np.pi)
+        self._theta_effect = kwargs.get('deviation_effect', lambda theta: (3.14-theta)/3.14)
         
         # Treasure instruction formula controls the weight of moving towards treasure according
         # to the ratio of distance to treasure to distance to protector
         self._treasure_instruction = kwargs.get('treasure_instruction')
+        self._shelter_instruction = kwargs.get('shelter_instruction')
         
         # Initialize state variables for intelligent player class
         self._treasure_distance = None
@@ -133,7 +134,7 @@ class IntelligentPlayer(InertiaPlayer):
     
     def calculate_shelter_based_weights(self, player_distance):
         
-        shelter_weight = self._treasure_instruction(
+        shelter_weight = self._shelter_instruction(
             self._shelter_distance / player_distance
         )
         player_weight = 1 - shelter_weight

@@ -169,12 +169,12 @@ class OptimizedMap(Map):
 		if mode == 'treasure':
 			if min_distance < vertex_i._shortest_distance_to_treasure:
 				vertex_i._shortest_distance_to_treasure = min_distance
-				vertex_i._shortest_distance_to_treasure_vector = min_distance_vector.get_center() - vertex_i.get_center()
+				vertex_i._shortest_distance_to_treasure_vector = VectorUtils.find_unit_vector(min_distance_vector.get_center() - vertex_i.get_center()) * self._vertex_size
 				
 		elif mode == 'shelter':
 			if min_distance < vertex_i._shortest_distance_to_shelter:
 				vertex_i._shortest_distance_to_shelter = min_distance
-				vertex_i._shortest_distance_to_shelter_vector = min_distance_vector.get_center() - vertex_i.get_center()
+				vertex_i._shortest_distance_to_shelter_vector = VectorUtils.find_unit_vector(min_distance_vector.get_center() - vertex_i.get_center()) * self._vertex_size
 		
 		if mode == 'treasure':
 			return vertex_i._shortest_distance_to_treasure, vertex_i._shortest_distance_to_treasure_vector
